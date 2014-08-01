@@ -17,9 +17,9 @@
   (str/replace s #"-(\w)" (comp str/upper-case second)))
 
 (defn prop-key-case [attr]
-  (if (re-find #"^(data\-|aria\-)" attr)
+  (if (re-find #"^(data\-|aria\-)" (name attr))
     attr
-    (kebab->camel attr)))
+    (keyword (kebab->camel (name attr)))))
 
 (defn prop-key-alias [prop]
   (case prop
@@ -29,10 +29,8 @@
 
 (defn fix-prop-key [prop-key]
   (-> prop-key
-      name
       prop-key-alias
-      prop-key-case
-      keyword))
+      prop-key-case))
 
 (defn fix-prop-val [prop-val]
   (if (map? prop-val)

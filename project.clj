@@ -1,6 +1,6 @@
-(defproject hairball "0.0.0"
+(defproject hairball "0.0.1-SNAPSHOT"
   :description "Keep your webapp from turning into a giant hairball"
-  :url "http://smallhelm.com/"
+  :url "https://github.com/smallhelm/hairball"
   :license {:name "The MIT License (MIT)"
             :url "http://opensource.org/licenses/MIT"}
 
