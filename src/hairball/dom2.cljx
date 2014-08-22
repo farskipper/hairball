@@ -1,5 +1,9 @@
 (ns hairball.dom2
-  (:require [clojure.string :refer [join]]))
+  (:require [clojure.string :refer [join]]
+            #+cljs
+            [hairball.app :refer [app-state app-get app-swap!]]
+            #+cljs
+            [goog.dom :as gdom]))
 
 (defn escape-html [text]
   (.. (str text)
@@ -32,7 +36,7 @@
            attrs    (second vdom)
            attrs    (if plain
                       attrs
-                      (merge {:data-hairball-id   (join "." path)
+                      (merge {:id                 (join "." path)
                               :data-hairball-hash (hash vdom)} attrs))
            children (rest (rest vdom))]
 
@@ -108,3 +112,68 @@
      (if (or (vector? result) (list? result));can't use "coll?" b/c JSop is a coll
        (filter JSop? (flatten result))
        [result]))))
+
+#+cljs
+(defn path->element [path]
+  (gdom/getElement (join "." path)))
+
+#+cljs
+(defn vdom->element [vdom]
+  ;TODO make this so it can make <body> <html> <head> tags so you can mount the whole page
+  (gdom/htmlToDocumentFragment (vdom->string vdom)))
+
+#+cljs
+(defn apply-JSop-to-dom! [jsop]
+  (let [op   (:op jsop)
+        path (:path jsop)
+        args (:args jsop)]
+    (js/console.log (name op))
+    (cond
+     (= op :insert-child)
+     (gdom/insertChildAt (path->element path) (vdom->element (first args)) (second args))
+
+     (= op :replace-node)
+     (gdom/replaceNode (vdom->element (first args)) (path->element path))
+
+     (= op :remove-node)
+     (gdom/removeNode (path->element path))
+
+     (= op :set-properties)
+     (gdom/setTextContent (path->element path) (clj->js (first args)))
+
+     (= op :set-content)
+     (gdom/setTextContent (path->element path) (first args))
+
+     (= op :set-properties)
+     (gdom/setTextContent (path->element path) (first args))
+
+     :else
+     (js/console.log (str "unkown op :" (name op))))))
+
+#+cljs
+(defn apply-JSops-to-dom! [JSops]
+  (doseq [jsop JSops]
+    (apply-JSop-to-dom! jsop)))
+
+#+cljs
+(def last-vdom nil)
+#+cljs
+(def ^:private refresh-queued? false)
+#+cljs
+(defn mount [element render-fn]
+  (let [watch-key (gensym)
+        render!   (fn []
+                    (set! refresh-queued? false)
+                    (apply-JSops-to-dom! (vdoms->JSops last-vdom (render-fn))))]
+    (do
+      (gdom/setProperties element #js {:id "root"})
+      (set! last-vdom (render-fn))
+      (apply-JSops-to-dom! [(JSop. :replace-node ["root"] [last-vdom])])
+
+      (add-watch app-state watch-key (fn [_ _ _ _]
+                                       (when-not refresh-queued?
+                                         (set! refresh-queued? true)
+                                         (if (exists? js/requestAnimationFrame)
+                                           (js/requestAnimationFrame render!)
+                                           (js/setTimeout render! 16))))))))
+

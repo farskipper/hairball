@@ -6,14 +6,25 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2311"]]
-  :source-paths ["src"]
+
+  :source-paths ["src" "target/classes"]
 
   :profiles {:dev {:plugins [[quickie "0.2.5"]
-                             [lein-cljsbuild "1.0.3"]]}}
+                             [lein-cljsbuild "1.0.3"]
+                             [com.keminglabs/cljx "0.4.0"]]}}
+
+
+  :cljx {:builds [{:source-paths ["src"]
+                   :output-path "target/classes"
+                   :rules :clj}
+
+                  {:source-paths ["src"]
+                   :output-path "target/classes"
+                   :rules :cljs}]}
 
   :cljsbuild {
     :builds [{:id "dev"
-              :source-paths ["src"]
+              :source-paths ["src" "target/classes"]
               :compiler {
                 :output-to  "resources/public/js/main.js"
                 :output-dir "resources/public/js/out"

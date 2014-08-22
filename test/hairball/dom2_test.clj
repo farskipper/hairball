@@ -67,7 +67,7 @@
                         [:li {} "2"]])))
 
 
-    (is (= [(JSop. :set-content ["root" 1] ["something long"])]
+  (is (= [(JSop. :set-content ["root" 1] ["something long"])]
          (vdoms->JSops [:ul {}
                         [:li {} "1"]
                         [:li {} "2"]]
