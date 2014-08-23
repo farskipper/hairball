@@ -23,6 +23,11 @@
 
 (def child-less-tags #{:br :input :img :circle :rect :line :ellipse})
 
+(defrecord Vdom [type attrs children])
+(defn Vdom? [a]
+  (= (type a) Vdom))
+
+
 ;NOTE
 ;NOTE vdom will not be made by hand, so don't be too worried about checking it
 ;NOTE
@@ -30,15 +35,15 @@
   ([vdom] (vdom->string vdom false ["root"]))
   ([vdom plain] (vdom->string vdom plain ["root"]))
   ([vdom plain path]
-   (if-not (vector? vdom)
+   (if-not (Vdom? vdom)
      (escape-html (str vdom))
-     (let [tag      (first vdom)
-           attrs    (second vdom)
+     (let [tag      (:type vdom)
+           attrs    (:attrs vdom)
            attrs    (if plain
                       attrs
                       (merge {:id                 (join "." path)
                               :data-hairball-hash (hash vdom)} attrs))
-           children (rest (rest vdom))]
+           children (:children vdom)]
 
        (if (contains? child-less-tags tag)
          (str "<" (name tag) (render-attrs attrs) "/>")
@@ -63,49 +68,61 @@
    (let [parent_path (butlast path)
          result      (cond
                       ;no diff
-                      (= old-vdom new-vdom) nil
+                      (= old-vdom new-vdom)
+                      nil
 
                       ;two vdoms
-                      (and (vector? old-vdom) (vector? new-vdom)) (let [old-type     (first old-vdom)
-                                                                        new-type     (first new-vdom)
-                                                                        old-attrs    (second old-vdom)
-                                                                        new-attrs    (second new-vdom)
-                                                                        old-children (into [] (rest (rest old-vdom)))
-                                                                        new-children (into [] (rest (rest new-vdom)))]
-                                                                    (if (= old-type new-type)
-                                                                      [
-                                                                       (if-not (= old-attrs new-attrs)
-                                                                         (JSop. :set-properties path [new-attrs]))
+                      (and (Vdom? old-vdom) (Vdom? new-vdom))
+                      (let [old-type     (:type old-vdom)
+                            new-type     (:type new-vdom)
+                            old-attrs    (:attrs old-vdom)
+                            new-attrs    (:attrs new-vdom)
+                            old-children (into [] (:children old-vdom))
+                            new-children (into [] (:children new-vdom))]
+                        (if (= old-type new-type)
+                          [
+                           (if-not (= old-attrs new-attrs)
+                             (JSop. :set-properties path [new-attrs]))
 
-                                                                       (if-not (= old-children new-children)
-                                                                         (for [k (all-childrens-keys old-children new-children)]
-                                                                           (vdoms->JSops (get old-children k)
-                                                                                         (get new-children k)
-                                                                                         (conj path k))))
-                                                                       ]
+                           (if-not (= old-children new-children)
+                             (for [k (all-childrens-keys old-children new-children)]
+                               (vdoms->JSops (get old-children k)
+                                             (get new-children k)
+                                             (conj path k))))
+                           ]
 
-                                                                      ;if it's a new type of node, just replace it
-                                                                      (JSop. :replace-node path [new-vdom])))
+                          ;if it's a new type of node, just replace it
+                          (JSop. :replace-node path [new-vdom])))
 
                       ;vdom to string
-                      (and (vector? old-vdom) (string? new-vdom)) [(JSop. :remove-node  path [])
-                                                                   (JSop. :set-content parent_path [new-vdom])]
+                      (and (Vdom? old-vdom) (string? new-vdom))
+                      [(JSop. :remove-node  path [])
+                       (JSop. :set-content parent_path [new-vdom])]
+
                       ;string to vdom
-                      (and (string? old-vdom) (vector? new-vdom)) [(JSop. :set-content parent_path [""])
-                                                                   (JSop. :insert-child  parent_path [new-vdom 0])]
+                      (and (string? old-vdom) (Vdom? new-vdom))
+                      [(JSop. :set-content parent_path [""])
+                       (JSop. :insert-child  parent_path [new-vdom 0])]
 
 
                       ;changed content
-                      (and (string? old-vdom) (string? new-vdom)) (JSop. :set-content parent_path [new-vdom])
-                      (and (nil? old-vdom) (string? new-vdom)) (JSop. :set-content parent_path [new-vdom])
-                      (and (string? old-vdom) (nil? new-vdom)) (JSop. :set-content parent_path [new-vdom])
+                      (and (string? old-vdom) (string? new-vdom))
+                      (JSop. :set-content parent_path [new-vdom])
+
+                      (and (nil? old-vdom) (string? new-vdom))
+                      (JSop. :set-content parent_path [new-vdom])
+
+                      (and (string? old-vdom) (nil? new-vdom))
+                      (JSop. :set-content parent_path [new-vdom])
 
 
                       ;removed vdom
-                      (and (vector? old-vdom) (nil? new-vdom)) (JSop. :remove-node path [])
+                      (and (Vdom? old-vdom) (nil? new-vdom))
+                      (JSop. :remove-node path [])
 
                       ;added vdom
-                      (and (nil? old-vdom) (vector? new-vdom)) (JSop. :insert-child parent_path [new-vdom (last path)])
+                      (and (nil? old-vdom) (Vdom? new-vdom))
+                      (JSop. :insert-child parent_path [new-vdom (last path)])
 
 
                       :else nil)]

@@ -5,24 +5,11 @@
 
 (app-swap! [:todo-items] ["one" "two" "three"])
 
-(js/console.log (pr-str (apply d/div ["one" "two"])))
-
-(js/console.log (pr-str (apply d/li (into [] (map (fn [item]
-                                                    (d/li (str item))) (app-get [:todo-items]))))))
-(js/console.log (pr-str
-                 (d/div
-                  (d/h1 "main app" (d/span (app-get [:hello])))
-                  (d/h2 "one" "two" "three")
-
-                  (apply d/li (map (fn [item]
-                                     (d/li (str item))) (app-get [:todo-items]))))))
-
-
 (defn App []
-  [:div {}
-   [:h1 {} "main app" [:span {} (app-get [:hello])]]
-   (into [] (concat [:ul {}] (map (fn [item]
-                           [:li {} (str item)]) (app-get [:todo-items]))))])
+  (d/div
+   (d/h1 "main app" (d/span nil (app-get [:hello])))
+   (d/ul (map (fn [item]
+                (d/li (str item))) (app-get [:todo-items])))))
 
 (hb/mount (js/document.getElementById "hairball-mount") App)
 

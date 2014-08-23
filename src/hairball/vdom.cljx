@@ -1,5 +1,6 @@
 (ns hairball.vdom
   (:refer-clojure :exclude [map meta time])
+  (:require [hairball.dom2 :refer [Vdom?]])
   #+cljs
   (:require-macros [hairball.vdom :as vdom]))
 
@@ -129,33 +130,12 @@
             :video
             :wbr])
 
-#+clj
 (defn fix-props [props]
   ;TODO flesh this out more (i.e. event handling)
   props)
 
-#+clj
 (defn props? [arg]
-  (or (map? arg) (nil? arg)))
-
-#+clj
-(defmacro gen-dom-macros []
-  `(do
-     ~@(clojure.core/map
-        (fn [tag]
-          `(defmacro ~(symbol "hairball.vdom" (str (name tag) "-macro")) [& args#]
-             (let [tag# ~tag
-                   props# (if (props? (first args#))
-                            (fix-props (first args#))
-                            nil)
-                   children# (if (props? (first args#))
-                               (rest args#)
-                               args#)]
-               ;TODO optimize this so we don't make a vector and flatten it on every single render i.e. (dom/div "hello" (dom/div "world")) shouldn't
-               `[~tag# ~props# ~@children#])))
-        tags)))
-#+clj
-(gen-dom-macros)
+  (and (or (map? arg) (nil? arg)) (not (Vdom? arg))))
 
 #+clj
 (defmacro gen-dom-fns []
@@ -163,8 +143,16 @@
      ~@(clojure.core/map
         (fn [tag]
           `(defn ~(symbol (name tag)) [& args#]
-             (~(symbol "hairball.vdom" (str (name tag) "-macro")) args#)))
+             (let [attrs#    (if (props? (first args#))
+                               (fix-props (first args#)))
+                   children# (if (props? (first args#))
+                               (rest args#)
+                               args#)]
+               (hairball.dom2.Vdom. ~tag attrs# (flatten (vector children#))))))
         tags)))
+
+#+clj
+(gen-dom-fns)
 
 #+cljs
 (vdom/gen-dom-fns)
