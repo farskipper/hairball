@@ -1,9 +1,10 @@
 (ns hairball.dom2
   (:require [clojure.string :refer [join]]
-            #+cljs
-            [hairball.app :refer [app-state app-get app-swap!]]
-            #+cljs
-            [goog.dom :as gdom]))
+            [hairball.vdom :refer [Vdom?]]
+            #+cljs [hairball.app :refer [app-state app-get app-swap!]]
+            #+cljs [goog.dom :as gdom]
+            #+cljs [goog.events :as gevnt]
+            #+cljs [goog.object :as gobj]))
 
 (defn escape-html [text]
   (.. (str text)
@@ -22,11 +23,6 @@
     (apply str (map render-attr attrs))))
 
 (def child-less-tags #{:br :input :img :circle :rect :line :ellipse})
-
-(defrecord Vdom [type attrs children])
-(defn Vdom? [a]
-  (= (type a) Vdom))
-
 
 ;NOTE
 ;NOTE vdom will not be made by hand, so don't be too worried about checking it
@@ -175,25 +171,35 @@
   (doseq [jsop JSops]
     (apply-JSop-to-dom! jsop)))
 
+
+#+cljs
+(defn onEvent [e]
+  (.stopPropagation e)
+  ;(.preventDefault e)
+  (js/console.log #js {:path (.-id (.-target e)) :e e})
+  false)
+#+cljs
+(def listenable-events (.-CLICK gevnt/EventType));(gobj/getValues gevnt/EventType)
+
+
 #+cljs
 (def last-vdom nil)
 #+cljs
 (def ^:private refresh-queued? false)
 #+cljs
 (defn mount [element render-fn]
+  (gdom/setProperties element #js {:id "root"})
+  (set! last-vdom (render-fn))
+  (apply-JSops-to-dom! [(JSop. :replace-node ["root"] [last-vdom])])
+  (gevnt/listen (path->element ["root"]) listenable-events onEvent true)
   (let [watch-key (gensym)
         render!   (fn []
                     (set! refresh-queued? false)
                     (apply-JSops-to-dom! (vdoms->JSops last-vdom (render-fn))))]
-    (do
-      (gdom/setProperties element #js {:id "root"})
-      (set! last-vdom (render-fn))
-      (apply-JSops-to-dom! [(JSop. :replace-node ["root"] [last-vdom])])
-
-      (add-watch app-state watch-key (fn [_ _ _ _]
-                                       (when-not refresh-queued?
-                                         (set! refresh-queued? true)
-                                         (if (exists? js/requestAnimationFrame)
-                                           (js/requestAnimationFrame render!)
-                                           (js/setTimeout render! 16))))))))
+    (add-watch app-state watch-key (fn [_ _ _ _]
+                                     (when-not refresh-queued?
+                                       (set! refresh-queued? true)
+                                       (if (exists? js/requestAnimationFrame)
+                                         (js/requestAnimationFrame render!)
+                                         (js/setTimeout render! 16)))))))
 

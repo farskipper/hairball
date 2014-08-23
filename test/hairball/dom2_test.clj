@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [hairball.dom2 :refer :all]
             [hairball.vdom :as d])
-  (:import [hairball.dom2 JSop Vdom]))
+  (:import [hairball.dom2 JSop]))
 
 (deftest test-escape-html
   (is (= "&lt;br&gt;" (escape-html "<br>")))

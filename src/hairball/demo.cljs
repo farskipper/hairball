@@ -5,11 +5,16 @@
 
 (app-swap! [:todo-items] ["one" "two" "three"])
 
+(defn addTodo []
+  (app-swap! [:todo-items] (conj (app-get [:todo-items]) "one more")))
+
 (defn App []
+  (js/console.log (pr-str (app-get [:todo-items])))
   (d/div
    (d/h1 "main app" (app-get [:hello]))
    (d/ul (map (fn [item]
-                (d/li (str item))) (app-get [:todo-items])))))
+                (d/li (str item))) (app-get [:todo-items])))
+   (d/a {:href "#" } "add")))
 
 (hb/mount (js/document.getElementById "hairball-mount") App)
 

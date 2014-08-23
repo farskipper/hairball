@@ -1,8 +1,12 @@
 (ns hairball.vdom
   (:refer-clojure :exclude [map meta time])
-  (:require [hairball.dom2 :refer [Vdom?]])
+  (:require [clojure.string :refer [join]])
   #+cljs
   (:require-macros [hairball.vdom :as vdom]))
+
+(defrecord Vdom [type attrs children])
+(defn Vdom? [a]
+  (= (type a) Vdom))
 
 #+clj
 (def tags '[:a
@@ -138,8 +142,16 @@
   (and (or (map? arg) (nil? arg)) (not (Vdom? arg))))
 
 (defn fix-children [children]
-  ;TODO flesh this out more (i.e. combine strings into one, remove nil parts etc...)
-  (flatten (vector children)))
+  (let [children (clojure.core/map (fn [child]
+                                     (if (or (Vdom? child) (nil? child) (string? child))
+                                       child
+                                       (str child)))
+                                   (flatten children))
+        vdoms    (filter Vdom? children)
+        text     (join "" (filter string? children))]
+    (if (> (count text) 0)
+      (conj vdoms text)
+      vdoms)))
 
 #+clj
 (defmacro gen-dom-fns []
@@ -152,7 +164,7 @@
                    children# (if (attrs? (first args#))
                                (rest args#)
                                args#)]
-               (hairball.dom2.Vdom. ~tag attrs# (fix-children children#)))))
+               (Vdom. ~tag attrs# (fix-children children#)))))
         tags)))
 
 #+clj
