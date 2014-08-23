@@ -9,7 +9,6 @@
   (app-swap! [:todo-items] (conj (app-get [:todo-items]) "one more")))
 
 (defn App []
-  (js/console.log (pr-str (app-get [:todo-items])))
   (d/div
    (d/h1 "main app" (app-get [:hello]))
    (d/ul (map (fn [item]

@@ -134,9 +134,9 @@
   (gdom/getElement (join "." path)))
 
 #+cljs
-(defn vdom->element [vdom]
+(defn vdom->element [vdom path]
   ;TODO make this so it can make <body> <html> <head> tags so you can mount the whole page
-  (gdom/htmlToDocumentFragment (vdom->string vdom)))
+  (gdom/htmlToDocumentFragment (vdom->string vdom false path)))
 
 #+cljs
 (defn apply-JSop-to-dom! [jsop]
@@ -146,10 +146,10 @@
     (js/console.log (name op))
     (cond
      (= op :insert-child)
-     (gdom/insertChildAt (path->element path) (vdom->element (first args)) (second args))
+     (gdom/insertChildAt (path->element path) (vdom->element (first args) (concat path [(second args)])) (second args))
 
      (= op :replace-node)
-     (gdom/replaceNode (vdom->element (first args)) (path->element path))
+     (gdom/replaceNode (vdom->element (first args) path) (path->element path))
 
      (= op :remove-node)
      (gdom/removeNode (path->element path))
@@ -195,7 +195,9 @@
   (let [watch-key (gensym)
         render!   (fn []
                     (set! refresh-queued? false)
-                    (apply-JSops-to-dom! (vdoms->JSops last-vdom (render-fn))))]
+                    (let [new-vdom (render-fn)]
+                      (apply-JSops-to-dom! (vdoms->JSops last-vdom new-vdom))
+                      (set! last-vdom new-vdom)))]
     (add-watch app-state watch-key (fn [_ _ _ _]
                                      (when-not refresh-queued?
                                        (set! refresh-queued? true)
