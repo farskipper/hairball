@@ -113,6 +113,9 @@
        (filter JSop? (flatten result))
        [result]))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; cljs only
+;;
 #+cljs
 (defn path->element [path]
   (gdom/getElement (join "." path)))
