@@ -8,6 +8,26 @@
 (defn Vdom? [a]
   (= (type a) Vdom))
 
+(defn fix-attrs [attrs]
+  (if (empty? attrs)
+    nil
+    attrs))
+
+(defn attrs? [arg]
+  (and (or (map? arg) (nil? arg)) (not (Vdom? arg))))
+
+(defn fix-children [children]
+  (let [children (clojure.core/map (fn [child]
+                                     (if (or (Vdom? child) (nil? child) (string? child))
+                                       child
+                                       (str child)))
+                                   (flatten children))
+        vdoms    (filter Vdom? children)
+        text     (join "" (filter string? children))]
+    (if (> (count text) 0)
+      (conj vdoms text)
+      vdoms)))
+
 #+clj
 (def tags '[:a
             :abbr
@@ -134,25 +154,6 @@
             :video
             :wbr])
 
-(defn fix-attrs [attrs]
-  ;TODO flesh this out more (i.e. event handling)
-  attrs)
-
-(defn attrs? [arg]
-  (and (or (map? arg) (nil? arg)) (not (Vdom? arg))))
-
-(defn fix-children [children]
-  (let [children (clojure.core/map (fn [child]
-                                     (if (or (Vdom? child) (nil? child) (string? child))
-                                       child
-                                       (str child)))
-                                   (flatten children))
-        vdoms    (filter Vdom? children)
-        text     (join "" (filter string? children))]
-    (if (> (count text) 0)
-      (conj vdoms text)
-      vdoms)))
-
 #+clj
 (defmacro gen-dom-fns []
   `(do
@@ -160,11 +161,11 @@
         (fn [tag]
           `(defn ~(symbol (name tag)) [& args#]
              (let [attrs#    (if (attrs? (first args#))
-                               (fix-attrs (first args#)))
+                               (first args#))
                    children# (if (attrs? (first args#))
                                (rest args#)
                                args#)]
-               (Vdom. ~tag attrs# (fix-children children#)))))
+               (Vdom. ~tag (fix-attrs attrs#) (fix-children children#)))))
         tags)))
 
 #+clj

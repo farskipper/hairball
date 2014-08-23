@@ -24,6 +24,25 @@
 
 (def child-less-tags #{:br :input :img :circle :rect :line :ellipse})
 
+
+#+cljs
+(def event-listeners (atom {}))
+#+cljs
+(def listenable-events #js [(.-CLICK  gevnt/EventType)
+                            (.-CHANGE gevnt/EventType)
+                            (.-RESIZE gevnt/EventType)
+                            ]);(gobj/getValues gevnt/EventType))
+#+cljs
+(defn attachListeners! [attrs path]
+  (doseq [event-name listenable-events]
+    (let [kw (keyword (str "on-" event-name))]
+      (if (contains? attrs kw)
+        (swap! event-listeners assoc-in [(join "." path) event-name] (kw attrs))))))
+
+(defn sanitize-attrs [attrs]
+  (apply dissoc attrs [:id :data-hairball-hash :on-click]))
+
+
 ;NOTE
 ;NOTE vdom will not be made by hand, so don't be too worried about checking it
 ;NOTE
@@ -33,20 +52,23 @@
   ([vdom plain path]
    (if-not (Vdom? vdom)
      (escape-html (str vdom))
-     (let [tag      (:type vdom)
-           attrs    (:attrs vdom)
-           attrs    (if plain
-                      attrs
-                      (merge {:id                 (join "." path)
-                              :data-hairball-hash (hash vdom)} attrs))
-           children (:children vdom)]
+     (do
+       #+cljs (attachListeners! (:attrs vdom) path)
 
-       (if (contains? child-less-tags tag)
-         (str "<" (name tag) (render-attrs attrs) "/>")
-         (str "<" (name tag) (render-attrs attrs) ">"
-              (apply str (map-indexed (fn [i vdom]
-                                        (vdom->string vdom plain (conj path i))) children))
-              "</" (name tag) ">"))))))
+       (let [tag      (:type vdom)
+             attrs    (:attrs vdom)
+             attrs    (sanitize-attrs attrs)
+             attrs    (if plain
+                        attrs
+                        (merge {:id                 (join "." path)
+                                :data-hairball-hash (hash vdom)} attrs))
+             children (:children vdom)]
+         (if (contains? child-less-tags tag)
+           (str "<" (name tag) (render-attrs attrs) "/>")
+           (str "<" (name tag) (render-attrs attrs) ">"
+                (apply str (map-indexed (fn [i vdom]
+                                          (vdom->string vdom plain (conj path i))) children))
+                "</" (name tag) ">")))))))
 
 (defn all-childrens-keys [children1 children2]
   (range (max (count children1) (count children2))))
@@ -60,7 +82,6 @@
 (defn vdoms->JSops
   ([old-vdom new-vdom] (vdoms->JSops old-vdom new-vdom ["root"]))
   ([old-vdom new-vdom path]
-   #_(println (pr-str [old-vdom new-vdom path]))
    (let [parent_path (butlast path)
          result      (cond
                       ;no diff
@@ -71,8 +92,8 @@
                       (and (Vdom? old-vdom) (Vdom? new-vdom))
                       (let [old-type     (:type old-vdom)
                             new-type     (:type new-vdom)
-                            old-attrs    (:attrs old-vdom)
-                            new-attrs    (:attrs new-vdom)
+                            old-attrs    (sanitize-attrs (:attrs old-vdom))
+                            new-attrs    (sanitize-attrs (:attrs new-vdom))
                             old-children (into [] (:children old-vdom))
                             new-children (into [] (:children new-vdom))]
                         (if (= old-type new-type)
@@ -174,13 +195,15 @@
 
 #+cljs
 (defn onEvent [e]
-  (.stopPropagation e)
-  ;(.preventDefault e)
-  (js/console.log #js {:path (.-id (.-target e)) :e e})
-  false)
-#+cljs
-(def listenable-events (.-CLICK gevnt/EventType));(gobj/getValues gevnt/EventType)
-
+  (let [path    (.-id (.-target e))
+        type    (.-type e)
+        handler (get-in @event-listeners [path type])]
+    (if (fn? handler)
+      (do
+        (.stopPropagation e)
+        (.preventDefault e)
+        (handler e)
+        false))))
 
 #+cljs
 (def last-vdom nil)

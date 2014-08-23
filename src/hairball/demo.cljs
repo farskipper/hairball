@@ -13,7 +13,7 @@
    (d/h1 "main app" (app-get [:hello]))
    (d/ul (map (fn [item]
                 (d/li (str item))) (app-get [:todo-items])))
-   (d/a {:href "#" } "add")))
+   (d/a {:href "#" :on-click addTodo} "add")))
 
 (hb/mount (js/document.getElementById "hairball-mount") App)
 
