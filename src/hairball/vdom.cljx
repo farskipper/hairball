@@ -1,5 +1,7 @@
 (ns hairball.vdom
-  (:refer-clojure :exclude [map meta time]))
+  (:refer-clojure :exclude [map meta time])
+  #+cljs
+  (:require-macros [hairball.vdom :as vdom]))
 
 #+clj
 (def tags '[:a
@@ -141,7 +143,7 @@
   `(do
      ~@(clojure.core/map
         (fn [tag]
-          `(defmacro ~(symbol "hairball.vdom" (name tag)) [& args#]
+          `(defmacro ~(symbol "hairball.vdom" (str (name tag) "-macro")) [& args#]
              (let [tag# ~tag
                    props# (if (props? (first args#))
                             (fix-props (first args#))
@@ -154,3 +156,15 @@
         tags)))
 #+clj
 (gen-dom-macros)
+
+#+clj
+(defmacro gen-dom-fns []
+  `(do
+     ~@(clojure.core/map
+        (fn [tag]
+          `(defn ~(symbol (name tag)) [& args#]
+             (~(symbol "hairball.vdom" (str (name tag) "-macro")) args#)))
+        tags)))
+
+#+cljs
+(vdom/gen-dom-fns)
