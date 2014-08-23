@@ -7,7 +7,7 @@
 
 (defn App []
   (d/div
-   (d/h1 "main app" (d/span nil (app-get [:hello])))
+   (d/h1 "main app" (app-get [:hello]))
    (d/ul (map (fn [item]
                 (d/li (str item))) (app-get [:todo-items])))))
 

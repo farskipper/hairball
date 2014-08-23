@@ -130,12 +130,16 @@
             :video
             :wbr])
 
-(defn fix-props [props]
+(defn fix-attrs [attrs]
   ;TODO flesh this out more (i.e. event handling)
-  props)
+  attrs)
 
-(defn props? [arg]
+(defn attrs? [arg]
   (and (or (map? arg) (nil? arg)) (not (Vdom? arg))))
+
+(defn fix-children [children]
+  ;TODO flesh this out more (i.e. combine strings into one, remove nil parts etc...)
+  (flatten (vector children)))
 
 #+clj
 (defmacro gen-dom-fns []
@@ -143,12 +147,12 @@
      ~@(clojure.core/map
         (fn [tag]
           `(defn ~(symbol (name tag)) [& args#]
-             (let [attrs#    (if (props? (first args#))
-                               (fix-props (first args#)))
-                   children# (if (props? (first args#))
+             (let [attrs#    (if (attrs? (first args#))
+                               (fix-attrs (first args#)))
+                   children# (if (attrs? (first args#))
                                (rest args#)
                                args#)]
-               (hairball.dom2.Vdom. ~tag attrs# (flatten (vector children#))))))
+               (hairball.dom2.Vdom. ~tag attrs# (fix-children children#)))))
         tags)))
 
 #+clj
