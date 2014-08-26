@@ -1,6 +1,7 @@
 (ns hairball.vdom
   (:refer-clojure :exclude [map meta time])
-  (:require [clojure.string :refer [join]])
+  (:require [clojure.string :refer [join]]
+            [hairball.app :refer [app-get app-swap!]])
   #+cljs
   (:require-macros [hairball.vdom :as vdom]))
 
@@ -173,3 +174,21 @@
 
 #+cljs
 (vdom/gen-dom-fns)
+
+(defn Input [type data-path]
+  (let [bindInput (fn [e]
+                    (app-swap! data-path (.-value (.-target e))))]
+    (if (= "textarea" type)
+      (textarea {:on-no-prevent-change bindInput
+                 :on-no-prevent-keyup  bindInput
+                 :on-no-prevent-input  bindInput
+                 :on-no-prevent-cut    bindInput
+                 :on-no-prevent-paste  bindInput
+                 :value (app-get data-path)} (app-get data-path))
+      (input {:type type
+              :on-no-prevent-change bindInput
+              :on-no-prevent-keyup  bindInput
+              :on-no-prevent-input  bindInput
+              :on-no-prevent-cut    bindInput
+              :on-no-prevent-paste  bindInput
+              :value (app-get data-path)}))))

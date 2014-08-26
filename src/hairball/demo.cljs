@@ -20,24 +20,13 @@
              "remove")))
 
 
-(defn Input [type data-path]
-  (let [bindInput (fn [e]
-                    (app-swap! data-path (.-value (.-target e))))]
-    (d/input {:type type
-              :on-no-prevent-change bindInput
-              :on-no-prevent-keyup  bindInput
-              :on-no-prevent-input  bindInput
-              :on-no-prevent-cut    bindInput
-              :on-no-prevent-paste  bindInput
-              :value (app-get data-path)})))
-
 (defn App []
   (d/div
    (d/h1 "main app" (app-get [:hello]))
    (d/ul (map Item (app-get [:todo-items])))
-   (Input "text" [:new-item])
-   (d/div (app-get [:new-item]))
-   (Input "text" [:new-item])
+   (d/Input "text" [:new-item])
+   (d/pre (app-get [:new-item]))
+   (d/Input "textarea" [:new-item])
    (d/a {:href "#" :on-click addTodo} "add")))
 
 (hb/mount (js/document.getElementById "hairball-mount") App)
