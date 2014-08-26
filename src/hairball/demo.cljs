@@ -8,11 +8,20 @@
 (defn addTodo []
   (app-swap! [:todo-items] (conj (app-get [:todo-items]) "one more")))
 
+
+(defn Item [item]
+  (d/li item
+        " "
+        (d/a {:href "#"
+              :on-click (fn []
+                          (js/console.log "TODO remove" item))}
+             "remove")))
+
+
 (defn App []
   (d/div
    (d/h1 "main app" (app-get [:hello]))
-   (d/ul (map (fn [item]
-                (d/li (str item))) (app-get [:todo-items])))
+   (d/ul (map Item (app-get [:todo-items])))
    (d/a {:href "#" :on-click addTodo} "add")))
 
 (hb/mount (js/document.getElementById "hairball-mount") App)
@@ -21,5 +30,5 @@
 (js/setTimeout (fn []
                  (app-swap! [:hello] "world")) 1000)
 
-(js/setTimeout (fn []
+#_(js/setTimeout (fn []
                  (app-swap! [:todo-items] (range 0 10))) 1000)
