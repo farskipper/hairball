@@ -25,8 +25,12 @@
 (def child-less-tags #{:br :input :img :circle :rect :line :ellipse})
 
 (defn sanitize-attrs [attrs]
-  ;TODO flesh this out
-  (apply dissoc attrs [:id :data-hairball-hash :on-click]))
+  (apply hash-map
+         (flatten
+          (filter
+           (fn [[k v]]
+             (not= 0 (.indexOf (name k) "on-")))
+           (apply dissoc attrs [:id :data-hairball-hash])))))
 
 ;NOTE
 ;NOTE vdom will not be made by hand, so don't be too worried about checking it
@@ -147,7 +151,7 @@
   (let [op   (:op jsop)
         path (:path jsop)
         args (:args jsop)]
-    (js/console.log (name op))
+    (js/console.log (name op) (join "." path))
     (cond
      (= op :insert-child)
      (gdom/insertChildAt (path->element path) (vdom->element (first args) (concat path [(second args)])) (second args))
@@ -159,12 +163,9 @@
      (gdom/removeNode (path->element path))
 
      (= op :set-properties)
-     (gdom/setTextContent (path->element path) (clj->js (first args)))
+     (gdom/setProperties (path->element path) (clj->js (first args)))
 
      (= op :set-content)
-     (gdom/setTextContent (path->element path) (first args))
-
-     (= op :set-properties)
      (gdom/setTextContent (path->element path) (first args))
 
      :else
@@ -195,23 +196,31 @@
 
 #+cljs
 (def listenable-events #js [(.-CLICK  gevnt/EventType)
+
                             (.-CHANGE gevnt/EventType)
+                            (.-KEYUP gevnt/EventType)
+                            (.-INPUT gevnt/EventType)
+                            (.-CUT gevnt/EventType)
+                            (.-PASTE gevnt/EventType)
+
                             (.-RESIZE gevnt/EventType)
                             ]);(gobj/getValues gevnt/EventType))
 
 #+cljs
 (defn onEvent [e]
-  (let [path    (split (.-id (.-target e)) #"\.")
-        attrs   (getAttrsFromVdom last-vdom path)
-        kw      (keyword (str "on-" (.-type e)))
-        handler (get attrs kw)]
-    (js/console.log (.-type e) (.-id (.-target e)))
-    (if (fn? handler)
-      (do
-        (.stopPropagation e)
-        (.preventDefault e)
-        (handler e)
-        false))))
+  (let [path     (split (.-id (.-target e)) #"\.")
+        attrs    (getAttrsFromVdom last-vdom path)
+        handler  (get attrs (keyword (str "on-" (.-type e))))
+        nhandler (get attrs (keyword (str "on-no-prevent-" (.-type e))))]
+    (if (fn? nhandler)
+      (nhandler e)
+
+      (if (fn? handler)
+        (do
+          (.stopPropagation e)
+          (.preventDefault e)
+          (handler e)
+          false)))))
 
 #+cljs
 (def ^:private refresh-queued? false)
