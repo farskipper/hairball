@@ -18,16 +18,20 @@
   (and (or (map? arg) (nil? arg)) (not (Vdom? arg))))
 
 (defn fix-children [children]
-  (let [children (clojure.core/map (fn [child]
+  (let [children (flatten children)
+        children (clojure.core/map (fn [child]
                                      (if (or (Vdom? child) (nil? child) (string? child))
                                        child
-                                       (str child)))
-                                   (flatten children))
-        vdoms    (filter Vdom? children)
-        text     (join "" (filter string? children))]
-    (if (> (count text) 0)
-      (conj vdoms text)
-      vdoms)))
+                                       (str child))) children)
+        children (filter (fn [child]
+                           (or (Vdom? child) (string? child))) children)]
+    (if (= 0 (count (filter Vdom? children)))
+      [(join "" (filter string? children))]
+
+      (clojure.core/map (fn [child]
+                          (if (string? child)
+                            (Vdom. :span nil [child])
+                            child)) children))))
 
 #+clj
 (def tags '[:a

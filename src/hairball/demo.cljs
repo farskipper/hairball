@@ -12,7 +12,7 @@
 
 
 (defn Item [item]
-  (d/li item
+  (d/li (d/span item)
         " "
         (d/a {:href "#"
               :on-click (fn []
@@ -35,5 +35,5 @@
 (js/setTimeout (fn []
                  (app-swap! [:hello] "world")) 1000)
 
-#_(js/setTimeout (fn []
+(js/setTimeout (fn []
                  (app-swap! [:todo-items] (range 0 3))) 1000)
