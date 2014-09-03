@@ -21,13 +21,13 @@
 
 
 (defn App []
-  (d/div
+  (d/div {:class "container"}
    (d/h1 "main app" (app-get [:hello]))
    (d/ul (map Item (app-get [:todo-items])))
-   (d/Input "text" [:new-item])
+   (d/Input [:new-item] "text" {:class "form-control"})
    (d/pre (app-get [:new-item]))
-   (d/Input "textarea" [:new-item])
-   (d/a {:href "#" :on-click addTodo} "add")))
+   (d/Input [:new-item] "textarea" {:rows 8 :class "form-control"})
+   (d/a {:href "#" :on-click addTodo :class "btn btn-default"} "add")))
 
 (hb/mount (js/document.getElementById "hairball-mount") App)
 
@@ -36,4 +36,4 @@
                  (app-swap! [:hello] "world")) 1000)
 
 #_(js/setTimeout (fn []
-                 (app-swap! [:todo-items] (range 0 10))) 1000)
+                 (app-swap! [:todo-items] (range 0 3))) 1000)

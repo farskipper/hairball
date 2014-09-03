@@ -175,20 +175,30 @@
 #+cljs
 (vdom/gen-dom-fns)
 
-(defn Input [type data-path]
-  (let [bindInput (fn [e]
+(defn Input [data-path & [type attrs]]
+  (let [type      (or type "text")
+        attrs     (if (map? attrs)
+                    attrs
+                    {})
+        bindInput (fn [e]
                     (app-swap! data-path (.-value (.-target e))))]
+    ;TODO suport type "select"
+    ;TODO suport type "gdate" (use google's date picker)
     (if (= "textarea" type)
-      (textarea {:on-no-prevent-change bindInput
-                 :on-no-prevent-keyup  bindInput
-                 :on-no-prevent-input  bindInput
-                 :on-no-prevent-cut    bindInput
-                 :on-no-prevent-paste  bindInput
-                 :value (app-get data-path)} (app-get data-path))
-      (input {:type type
-              :on-no-prevent-change bindInput
-              :on-no-prevent-keyup  bindInput
-              :on-no-prevent-input  bindInput
-              :on-no-prevent-cut    bindInput
-              :on-no-prevent-paste  bindInput
-              :value (app-get data-path)}))))
+      (textarea (merge
+                 {:on-no-prevent-change bindInput
+                  :on-no-prevent-keyup  bindInput
+                  :on-no-prevent-input  bindInput
+                  :on-no-prevent-cut    bindInput
+                  :on-no-prevent-paste  bindInput
+                  :value (app-get data-path)}
+                 attrs) (app-get data-path))
+      (input (merge
+              {:type type
+               :on-no-prevent-change bindInput
+               :on-no-prevent-keyup  bindInput
+               :on-no-prevent-input  bindInput
+               :on-no-prevent-cut    bindInput
+               :on-no-prevent-paste  bindInput
+               :value (app-get data-path)}
+              attrs)))))
