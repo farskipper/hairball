@@ -1,5 +1,5 @@
 (ns hairball.demo
-  (:require [hairball.dom2 :as hb]
+  (:require [hairball.core :as hb]
             [hairball.vdom :as d :include-macros true]
             [hairball.app :refer [app-get app-swap!]]))
 

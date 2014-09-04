@@ -1,4 +1,4 @@
-(ns hairball.dom2
+(ns hairball.core
   (:require [clojure.string :refer [join split]]
             [hairball.vdom :refer [Vdom?]]
             #+cljs [hairball.app :refer [app-state app-get app-swap!]]

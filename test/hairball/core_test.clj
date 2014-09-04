@@ -1,8 +1,8 @@
-(ns hairball.dom2-test
+(ns hairball.core-test
   (:require [clojure.test :refer :all]
-            [hairball.dom2 :refer :all]
+            [hairball.core :refer :all]
             [hairball.vdom :as d])
-  (:import [hairball.dom2 JSop]))
+  (:import [hairball.core JSop]))
 
 (deftest test-escape-html
   (is (= "&lt;br&gt;" (escape-html "<br>")))
