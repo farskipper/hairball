@@ -13,7 +13,7 @@
 
 (defn Item [item]
   (d/li (d/span item)
-        " "
+        " - "
         (d/a {:href "#"
               :on-click (fn []
                           (js/console.log "TODO remove" item))}
@@ -21,7 +21,9 @@
 
 
 (defn App []
-  (d/div {:class "container"}
+  (d/div {:class "container"
+          :on-click (fn []
+                      (js/console.log "clicked the continer"))}
    (d/h1 "main app" (app-get [:hello]))
    (d/ul (map Item (app-get [:todo-items])))
    (d/Input [:new-item] "text" {:class "form-control"})

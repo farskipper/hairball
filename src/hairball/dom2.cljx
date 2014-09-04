@@ -181,20 +181,6 @@
 (def last-vdom nil)
 
 #+cljs
-(defn walk-vdom [vdom path]
-  (let [curr-index (first path)]
-    (if (nil? curr-index)
-      vdom
-      (if (= curr-index "root")
-        (walk-vdom vdom (rest path))
-        (walk-vdom (nth (:children vdom) (js/parseInt curr-index) nil) (rest path))))))
-
-#+cljs
-(defn getAttrsFromVdom [last-vdom path]
-  (let [vdom (walk-vdom last-vdom path)]
-    (:attrs vdom)))
-
-#+cljs
 (def listenable-events #js [(.-CLICK  gevnt/EventType)
 
                             (.-CHANGE gevnt/EventType)
@@ -207,9 +193,14 @@
                             ]);(gobj/getValues gevnt/EventType))
 
 #+cljs
-(defn onEvent [e]
-  (let [path     (split (.-id (.-target e)) #"\.")
-        attrs    (getAttrsFromVdom last-vdom path)
+(defn callEventHandlers [e vdom path]
+  ;first recurse down the dom tree to the given path
+  (let [curr-index (first path)]
+    (if-not (nil? curr-index)
+      (callEventHandlers e (nth (:children vdom) (js/parseInt curr-index) nil) (rest path))))
+
+  ;then as the recursion pops off the call stack "bubble up" the event handlers
+  (let [attrs    (:attrs vdom)
         handler  (get attrs (keyword (str "on-" (.-type e))))
         nhandler (get attrs (keyword (str "on-no-prevent-" (.-type e))))]
     (if (fn? nhandler)
@@ -217,10 +208,18 @@
 
       (if (fn? handler)
         (do
-          (.stopPropagation e)
           (.preventDefault e)
           (handler e)
           false)))))
+
+#+cljs
+(defn onEvent [e]
+  (let [path (split (.-id (.-target e)) #"\.")
+        path (rest path)];pop off the root
+    (do
+      (.stopPropagation e)
+      (callEventHandlers e last-vdom path)
+      false)))
 
 #+cljs
 (def ^:private refresh-queued? false)
