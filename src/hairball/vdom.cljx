@@ -34,143 +34,143 @@
                             child)) children))))
 
 #+clj
-(def tags '[:a
-            :abbr
-            :address
-            :area
-            :article
-            :aside
-            :audio
-            :b
-            :base
-            :bdi
-            :bdo
-            :big
-            :blockquote
-            :body
-            :br
-            :button
-            :canvas
-            :caption
-            :circle
-            :cite
-            :code
-            :col
-            :colgroup
-            :data
-            :datalist
-            :dd
-            :defs
-            :del
-            :details
-            :dfn
-            :div
-            :dl
-            :dt
-            :em
-            :embed
-            :fieldset
-            :figcaption
-            :figure
-            :footer
-            :form
-            :g
-            :h1
-            :h2
-            :h3
-            :h4
-            :h5
-            :h6
-            :head
-            :header
-            :hr
-            :html
-            :i
-            :iframe
-            :img
-            :injection
-            :input
-            :ins
-            :kbd
-            :keygen
-            :label
-            :legend
-            :li
-            :line
-            :linearGradient
-            :link
-            :main
-            :map
-            :mark
-            :menu
-            :menuitem
-            :meta
-            :meter
-            :nav
-            :noscript
-            :object
-            :ol
-            :optgroup
-            :option
-            :output
-            :p
-            :param
-            :path
-            :polygon
-            :polyline
-            :pre
-            :progress
-            :q
-            :radialGradient
-            :rect
-            :rp
-            :rt
-            :ruby
-            :s
-            :samp
-            :script
-            :section
-            :select
-            :small
-            :source
-            :span
-            :stop
-            :strong
-            :style
-            :sub
-            :summary
-            :sup
-            :svg
-            :table
-            :tbody
-            :td
-            :text
-            :textarea
-            :tfoot
-            :th
-            :thead
-            :time
-            :title
-            :tr
-            :track
-            :u
-            :ul
-            :var
-            :video
-            :wbr])
+(def tags '[a
+            abbr
+            address
+            area
+            article
+            aside
+            audio
+            b
+            base
+            bdi
+            bdo
+            big
+            blockquote
+            body
+            br
+            button
+            canvas
+            caption
+            circle
+            cite
+            code
+            col
+            colgroup
+            data
+            datalist
+            dd
+            defs
+            del
+            details
+            dfn
+            div
+            dl
+            dt
+            em
+            embed
+            fieldset
+            figcaption
+            figure
+            footer
+            form
+            g
+            h1
+            h2
+            h3
+            h4
+            h5
+            h6
+            head
+            header
+            hr
+            html
+            i
+            iframe
+            img
+            injection
+            input
+            ins
+            kbd
+            keygen
+            label
+            legend
+            li
+            line
+            linearGradient
+            link
+            main
+            map
+            mark
+            menu
+            menuitem
+            meta
+            meter
+            nav
+            noscript
+            object
+            ol
+            optgroup
+            option
+            output
+            p
+            param
+            path
+            polygon
+            polyline
+            pre
+            progress
+            q
+            radialGradient
+            rect
+            rp
+            rt
+            ruby
+            s
+            samp
+            script
+            section
+            select
+            small
+            source
+            span
+            stop
+            strong
+            style
+            sub
+            summary
+            sup
+            svg
+            table
+            tbody
+            td
+            text
+            textarea
+            tfoot
+            th
+            thead
+            time
+            title
+            tr
+            track
+            u
+            ul
+            var
+            video
+            wbr])
 
 #+clj
 (defmacro gen-dom-fns []
   `(do
      ~@(clojure.core/map
         (fn [tag]
-          `(defn ~(symbol (name tag)) [& args#]
+          `(defn ~tag [& args#]
              (let [attrs#    (if (attrs? (first args#))
                                (first args#))
                    children# (if (attrs? (first args#))
                                (rest args#)
                                args#)]
-               (Vdom. ~tag (fix-attrs attrs#) (fix-children children#)))))
+               (Vdom. ~(keyword (name tag)) (fix-attrs attrs#) (fix-children children#)))))
         tags)))
 
 #+clj
@@ -180,29 +180,29 @@
 (vdom/gen-dom-fns)
 
 (defn Input [data-path & [type attrs]]
-  (let [type      (or type "text")
-        attrs     (if (map? attrs)
-                    attrs
-                    {})
-        bindInput (fn [e]
-                    (app-swap! data-path (.-value (.-target e))))]
+  (let [type       (or type "text")
+        attrs      (if (map? attrs)
+                     attrs
+                     {})
+        bindInput! (fn [e]
+                     (app-swap! data-path (.-value (.-target e))))]
     ;TODO suport type "select"
     ;TODO suport type "gdate" (use google's date picker)
     (if (= "textarea" type)
       (textarea (merge
-                 {:on-no-prevent-change bindInput
-                  :on-no-prevent-keyup  bindInput
-                  :on-no-prevent-input  bindInput
-                  :on-no-prevent-cut    bindInput
-                  :on-no-prevent-paste  bindInput
-                  :value (app-get data-path)}
+                 {:on-no-prevent-change bindInput!
+                  :on-no-prevent-keyup  bindInput!
+                  :on-no-prevent-input  bindInput!
+                  :on-no-prevent-cut    bindInput!
+                  :on-no-prevent-paste  bindInput!
+                  :value                (app-get data-path)}
                  attrs) (app-get data-path))
       (input (merge
               {:type type
-               :on-no-prevent-change bindInput
-               :on-no-prevent-keyup  bindInput
-               :on-no-prevent-input  bindInput
-               :on-no-prevent-cut    bindInput
-               :on-no-prevent-paste  bindInput
-               :value (app-get data-path)}
+               :on-no-prevent-change bindInput!
+               :on-no-prevent-keyup  bindInput!
+               :on-no-prevent-input  bindInput!
+               :on-no-prevent-cut    bindInput!
+               :on-no-prevent-paste  bindInput!
+               :value                (app-get data-path)}
               attrs)))))
