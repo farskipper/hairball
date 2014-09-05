@@ -151,7 +151,6 @@
   (let [op   (:op jsop)
         path (:path jsop)
         args (:args jsop)]
-    (js/console.log (name op) (join "." path))
     (cond
      (= op :insert-child)
      (gdom/insertChildAt (path->element path) (vdom->element (first args) (concat path [(second args)])) (second args))
@@ -169,7 +168,7 @@
      (gdom/setTextContent (path->element path) (first args))
 
      :else
-     (js/console.log (str "unkown op :" (name op))))))
+     (js/console.error (str "unkown op :" (name op))))))
 
 #+cljs
 (defn apply-JSops-to-dom! [JSops]
