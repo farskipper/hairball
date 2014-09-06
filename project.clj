@@ -29,9 +29,8 @@
                    :hooks [cljx.hooks]
 
                    :cljsbuild {:builds [{:id "dev"
-                                         :source-paths ["src" "target/generated/classes"]
-                                         :compiler {
-                                                    :output-to  "resources/public/js/main.js"
+                                         :source-paths ["src" "target/classes" "target/generated/classes"]
+                                         :compiler {:output-to  "resources/public/js/main.js"
                                                     :output-dir "resources/public/js/out"
                                                     :optimizations :none
                                                     :source-map true}}]}
