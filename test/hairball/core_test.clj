@@ -35,6 +35,8 @@
          (vdoms->JSops (d/div)
                        (d/span))))
 
+  (is (= [] (vdoms->JSops (d/div) (d/div))));no change => no ops
+
   (is (= [(JSop. :set-properties ["root"] [{:class "after"}])]
          (vdoms->JSops (d/div {:class "before"})
                        (d/div {:class "after"}))))

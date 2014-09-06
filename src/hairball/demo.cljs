@@ -29,7 +29,10 @@
    (d/Input [:new-item] "text" {:class "form-control"})
    (d/pre (app-get [:new-item]))
    (d/Input [:new-item] "textarea" {:rows 8 :class "form-control"})
-   (d/a {:href "#" :on-click addTodo :class "btn btn-default"} "add")))
+   (d/a {:href "#" :on-click addTodo :class "btn btn-default"} "add")
+   (d/form {:on-submit (fn []
+                         (js/console.log "submit"))}
+           (d/Input [:old-item] "text"))))
 
 (hb/mount (js/document.getElementById "hairball-mount") App)
 

@@ -130,9 +130,7 @@
 
 
                       :else nil)]
-     (if (or (vector? result) (list? result));can't use "coll?" b/c JSop is a coll
-       (filter JSop? (flatten result))
-       [result]))))
+     (filter JSop? (flatten [result])))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cljs only
@@ -168,7 +166,7 @@
      (gdom/setTextContent (path->element path) (first args))
 
      :else
-     (js/console.error (str "unkown op :" (name op))))))
+     (js/console.error (str "unkown op :" (pr-str jsop))))))
 
 #+cljs
 (defn apply-JSops-to-dom! [JSops]
@@ -295,7 +293,6 @@
                             (.-DOMNODEINSERTEDINTODOCUMENT gevnt/EventType)
                             (.-DOMATTRMODIFIED gevnt/EventType)
                             (.-DOMCHARACTERDATAMODIFIED gevnt/EventType)])
-;TODO make a subset of these events and hide browser differences
 
 #+cljs
 (defn callEventHandlers [e vdom path]
@@ -333,7 +330,7 @@
   (gdom/setProperties element #js {:id "root"})
   (set! last-vdom (render-fn))
   (apply-JSops-to-dom! [(JSop. :replace-node ["root"] [last-vdom])])
-  (gevnt/listen (path->element ["root"]) listenable-events onEvent true)
+  (gevnt/listen js/document listenable-events onEvent true)
   (let [watch-key (gensym)
         render!   (fn []
                     (set! refresh-queued? false)

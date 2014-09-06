@@ -36,4 +36,6 @@
                                                     :source-map true}}]}
 
                    :aliases {"dev"    ["pdo" "cljx" "auto," "cljsbuild" "auto," "quickie"]
-                             "deploy" ["do" "clean," "deploy" "clojars"]}}})
+                             "deploy" ["do"
+                                       ["clean"]
+                                       ["deploy" "clojars"]]}}})
