@@ -160,7 +160,13 @@
      (gdom/removeNode (path->element path))
 
      (= op :set-properties)
-     (gdom/setProperties (path->element path) (clj->js (first args)))
+     (let [props  (first args)
+           elment (path->element path)
+           value  (and elment (.-value elment))
+           props  (if (= (get props :value nil) value)
+                    (dissoc props :value);don't re-asign the form input value if it's the same
+                    props)]
+       (gdom/setProperties elment (clj->js props)))
 
      (= op :set-content)
      (gdom/setTextContent (path->element path) (first args))
