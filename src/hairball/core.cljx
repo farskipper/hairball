@@ -22,40 +22,65 @@
     ""
     (apply str (map render-attr attrs))))
 
-(def child-less-tags #{:br :input :img :circle :rect :line :ellipse})
+(def child-less-tags #{:area
+                       :base
+                       :br
+                       :col
+                       :embed
+                       :hr
+                       :img
+                       :input
+                       :keygen
+                       :link
+                       :meta
+                       :param
+                       :source
+                       :track
+                       :wbr})
 
 (defn sanitize-attrs [attrs]
   (apply hash-map
          (flatten
           (filter
            (fn [[k v]]
-             (not= 0 (.indexOf (name k) "on-")))
+             (not (or (= 0 (.indexOf (name k) "on-")) (nil? v))))
            (apply dissoc attrs [:id :data-hairball-hash])))))
 
-(defn cleanup-attrs [vdom plain path]
-  (if plain
-    (sanitize-attrs (:attrs vdom))
-    (merge {:id                 (join "." path)
-            :data-hairball-hash (hash vdom)} (sanitize-attrs (:attrs vdom)))))
+(defn path->id [path]
+  (join "." path))
+
+(defn cleanup-attrs
+  ([path vdom]         (cleanup-attrs path vdom true))
+  ([path vdom add-id?] (cleanup-attrs path vdom add-id? false))
+  ([path vdom add-id? add-hash?]
+   (let [attrs (sanitize-attrs (:attrs vdom))
+         attrs (if add-id?
+                 (assoc attrs :id (path->id path))
+                 attrs)
+         attrs (if add-hash?
+                 (assoc attrs :data-hairball-hash (hash vdom))
+                 attrs)]
+     attrs)))
 
 ;NOTE
 ;NOTE vdom will not be made by hand, so don't be too worried about checking it
 ;NOTE
 (defn vdom->string
-  ([vdom] (vdom->string vdom false ["root"]))
-  ([vdom plain] (vdom->string vdom plain ["root"]))
-  ([vdom plain path]
+  ([vdom]              (vdom->string vdom ["root"]))
+  ([vdom path]         (vdom->string vdom path true))
+  ([vdom path add-id?] (vdom->string vdom path add-id? false))
+  ([vdom path add-id? add-hash?]
    (if-not (Vdom? vdom)
      (escape-html (str vdom))
      (do
        (let [tag      (:type vdom)
-             attrs    (cleanup-attrs vdom plain path)
+             attrs    (cleanup-attrs path vdom add-id? add-hash?)
              children (:children vdom)]
          (if (contains? child-less-tags tag)
            (str "<" (name tag) (render-attrs attrs) "/>")
            (str "<" (name tag) (render-attrs attrs) ">"
                 (apply str (map-indexed (fn [i vdom]
-                                          (vdom->string vdom plain (concat path [i]))) children))
+                                          (vdom->string vdom (concat path [i]) add-id? add-hash?)) children))
                 "</" (name tag) ">")))))))
 
 (defn all-childrens-keys [children1 children2]
@@ -80,14 +105,18 @@
                       (and (Vdom? old-vdom) (Vdom? new-vdom))
                       (let [old-type     (:type old-vdom)
                             new-type     (:type new-vdom)
-                            old-attrs    (sanitize-attrs (:attrs old-vdom))
-                            new-attrs    (sanitize-attrs (:attrs new-vdom))
+                            old-attrs    (cleanup-attrs path old-vdom)
+                            new-attrs    (cleanup-attrs path new-vdom)
                             old-children (into [] (:children old-vdom))
                             new-children (into [] (:children new-vdom))]
                         (if (= old-type new-type)
                           [
                            (if-not (= old-attrs new-attrs)
-                             (JSop. :set-properties path [new-vdom]))
+                             (for [k (set (concat (keys old-attrs) (keys new-attrs)))]
+                               (if (and (contains? old-attrs k) (not (contains? new-attrs k)))
+                                 (JSop. :remove-attribute path [k])
+                                 (if-not (= (get old-attrs k nil) (get new-attrs k))
+                                   (JSop. :set-attribute path [k (get new-attrs k)])))))
 
                            (if-not (= old-children new-children)
                              (for [k (all-childrens-keys old-children new-children)]
@@ -138,33 +167,30 @@
 ;;
 #+cljs
 (defn path->element [path]
-  (gdom/getElement (join "." path)))
-
-
-#+cljs
-(defn setProperties!
-  ([path vdom] (setProperties! path vdom (path->element path)))
-  ([path vdom element]
-   (let [props (cleanup-attrs vdom false path)
-         value (and element (.-value element))
-         props (if (= (get props :value nil) value)
-                 (dissoc props :value);don't re-asign the form input value if it's the same
-                 props)]
-     (js/console.log "set props" (pr-str path)(clj->js props))
-     (gdom/setProperties element (clj->js props)))))
+  (gdom/getElement (path->id path)))
 
 #+cljs
 (defn vdom->element [vdom path]
   (let [tag      (:type vdom)
-        elm      (js/document.createElement (name tag))
-        children (:children vdom)]
+        attrs    (cleanup-attrs path vdom)
+        children (:children vdom)
+        element  (js/document.createElement (name tag))]
     (do
-      (setProperties! path vdom elm)
+      (gdom/setProperties element (clj->js attrs))
       (if-not (contains? child-less-tags tag)
-        (set! (.-innerHTML elm) (apply str (map-indexed (fn [i vdom]
-                                                          (vdom->string vdom false (concat path [i]))) children))))
-      elm)))
-;  ;TODO make this so it can make <body> <html> <head> tags so you can mount the whole page
+        (set! (.-innerHTML element) (apply str (map-indexed (fn [i vdom]
+                                                              (vdom->string vdom (concat path [i]))) children))))
+      element)))
+
+#+cljs
+(defn set-attribute! [path attr value]
+  (let [element (path->element path)
+        value   (if (= :value attr)
+                  (if (string? value) value "")
+                  value)]
+    (if (and (= :value attr) (= value (and element (.-value element))))
+      nil;don't re-asign the form input value if it's the same (causes cursors position to change)
+      (gdom/setProperties element (js-obj (name attr) value)))))
 
 #+cljs
 (defn apply-JSop-to-dom! [jsop]
@@ -181,8 +207,11 @@
      (= op :remove-node)
      (gdom/removeNode (path->element path))
 
-     (= op :set-properties)
-     (setProperties! path (first args))
+     (= op :set-attribute)
+     (set-attribute! path (first args) (second args))
+
+     (= op :remove-attribute)
+     (.removeAttribute (path->element path) (name (first args)))
 
      (= op :set-content)
      (gdom/setTextContent (path->element path) (first args))

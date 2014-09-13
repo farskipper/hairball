@@ -64,3 +64,6 @@
 
 (js/setTimeout (fn []
                  (app-swap! [:title-class] "text-muted")) 3000)
+
+(js/setTimeout (fn []
+                 (app-swap! [:title-class] nil)) 6000)
