@@ -32,6 +32,12 @@
              (not= 0 (.indexOf (name k) "on-")))
            (apply dissoc attrs [:id :data-hairball-hash])))))
 
+(defn cleanup-attrs [vdom plain path]
+  (if plain
+    (sanitize-attrs (:attrs vdom))
+    (merge {:id                 (join "." path)
+            :data-hairball-hash (hash vdom)} (sanitize-attrs (:attrs vdom)))))
+
 ;NOTE
 ;NOTE vdom will not be made by hand, so don't be too worried about checking it
 ;NOTE
@@ -43,12 +49,7 @@
      (escape-html (str vdom))
      (do
        (let [tag      (:type vdom)
-             attrs    (:attrs vdom)
-             attrs    (sanitize-attrs attrs)
-             attrs    (if plain
-                        attrs
-                        (merge {:id                 (join "." path)
-                                :data-hairball-hash (hash vdom)} attrs))
+             attrs    (cleanup-attrs vdom plain path)
              children (:children vdom)]
          (if (contains? child-less-tags tag)
            (str "<" (name tag) (render-attrs attrs) "/>")
@@ -86,7 +87,7 @@
                         (if (= old-type new-type)
                           [
                            (if-not (= old-attrs new-attrs)
-                             (JSop. :set-properties path [new-attrs]))
+                             (JSop. :set-properties path [new-vdom]))
 
                            (if-not (= old-children new-children)
                              (for [k (all-childrens-keys old-children new-children)]
@@ -139,10 +140,31 @@
 (defn path->element [path]
   (gdom/getElement (join "." path)))
 
+
+#+cljs
+(defn setProperties!
+  ([path vdom] (setProperties! path vdom (path->element path)))
+  ([path vdom element]
+   (let [props (cleanup-attrs vdom false path)
+         value (and element (.-value element))
+         props (if (= (get props :value nil) value)
+                 (dissoc props :value);don't re-asign the form input value if it's the same
+                 props)]
+     (js/console.log "set props" (pr-str path)(clj->js props))
+     (gdom/setProperties element (clj->js props)))))
+
 #+cljs
 (defn vdom->element [vdom path]
-  ;TODO make this so it can make <body> <html> <head> tags so you can mount the whole page
-  (gdom/htmlToDocumentFragment (vdom->string vdom false path)))
+  (let [tag      (:type vdom)
+        elm      (js/document.createElement (name tag))
+        children (:children vdom)]
+    (do
+      (setProperties! path vdom elm)
+      (if-not (contains? child-less-tags tag)
+        (set! (.-innerHTML elm) (apply str (map-indexed (fn [i vdom]
+                                                          (vdom->string vdom false (concat path [i]))) children))))
+      elm)))
+;  ;TODO make this so it can make <body> <html> <head> tags so you can mount the whole page
 
 #+cljs
 (defn apply-JSop-to-dom! [jsop]
@@ -160,13 +182,7 @@
      (gdom/removeNode (path->element path))
 
      (= op :set-properties)
-     (let [props  (first args)
-           elment (path->element path)
-           value  (and elment (.-value elment))
-           props  (if (= (get props :value nil) value)
-                    (dissoc props :value);don't re-asign the form input value if it's the same
-                    props)]
-       (gdom/setProperties elment (clj->js props)))
+     (setProperties! path (first args))
 
      (= op :set-content)
      (gdom/setTextContent (path->element path) (first args))
