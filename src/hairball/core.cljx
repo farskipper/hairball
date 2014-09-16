@@ -1,13 +1,18 @@
 (ns hairball.core
-  (:require [clojure.string :refer [join split]]
+  (:refer-clojure :exclude [replace])
+  (:require [clojure.string :refer [join split replace]]
             [hairball.vdom :refer [Vdom?]]
             #+cljs [hairball.app :refer [app-state app-get app-swap!]]
             #+cljs [goog.dom :as gdom]
             #+cljs [goog.events :as gevnt]
             #+cljs [goog.object :as gobj]))
 
+(defn map-values [f m]
+  (into {} (for [[k v] m]
+             [k (f v)])))
+
 (defn escape-html [text]
-  (.. (str text)
+  (-> (str text)
     (replace "&"  "&amp;")
     (replace "<"  "&lt;")
     (replace ">"  "&gt;")
@@ -38,14 +43,6 @@
                        :track
                        :wbr})
 
-(defn sanitize-attrs [attrs]
-  (apply hash-map
-         (flatten
-          (filter
-           (fn [[k v]]
-             (not (or (= 0 (.indexOf (name k) "on-")) (nil? v))))
-           (apply dissoc attrs [:id :data-hairball-hash])))))
-
 (defn path->id [path]
   (join "." path))
 
@@ -53,13 +50,16 @@
   ([path vdom]         (cleanup-attrs path vdom true))
   ([path vdom add-id?] (cleanup-attrs path vdom add-id? false))
   ([path vdom add-id? add-hash?]
-   (let [attrs (sanitize-attrs (:attrs vdom))
+   (let [attrs (apply dissoc (:attrs vdom) [:id :data-hairball-hash])
+         attrs (apply hash-map (flatten (filter (fn [[k v]]
+                                                  (not (or (= 0 (.indexOf (name k) "on-")) (nil? v)))) attrs)))
          attrs (if add-id?
                  (assoc attrs :id (path->id path))
                  attrs)
          attrs (if add-hash?
                  (assoc attrs :data-hairball-hash (hash vdom))
-                 attrs)]
+                 attrs)
+         attrs (map-values escape-html attrs)]
      attrs)))
 
 ;NOTE

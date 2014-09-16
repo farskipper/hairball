@@ -186,23 +186,44 @@
                      {})
         bindInput! (fn [e]
                      (app-swap! data-path (.-value (.-target e))))]
-    ;TODO suport type "select"
     ;TODO suport type "gdate" (use google's date picker)
-    (if (= "textarea" type)
-      (textarea (merge
-                 {:on-no-prevent-change bindInput!
-                  :on-no-prevent-keyup  bindInput!
-                  :on-no-prevent-input  bindInput!
-                  :on-no-prevent-cut    bindInput!
-                  :on-no-prevent-paste  bindInput!
-                  :value                (app-get data-path)}
-                 attrs) (app-get data-path))
-      (input (merge
-              {:type type
-               :on-no-prevent-change bindInput!
-               :on-no-prevent-keyup  bindInput!
-               :on-no-prevent-input  bindInput!
-               :on-no-prevent-cut    bindInput!
-               :on-no-prevent-paste  bindInput!
-               :value                (app-get data-path)}
-              attrs)))))
+    (cond
+     (= "select" type)
+     (let [options     (:options attrs);a list of key value pairs
+           options     (cons [nil (get attrs :placeholder "")] options);add the placeholder as the first option
+           attrs       (dissoc attrs :options)
+           value       (app-get data-path)
+           value       (if (contains? (into #{} (clojure.core/map first options)) value)
+                         value
+                         nil)
+           bindInput!  (fn [e]
+                         (app-swap! data-path (first (nth options (int (.-value (.-target e))) [nil]))))]
+       (div
+        (pr-str (app-get data-path)) " = " (pr-str value) " " (div (into #{} (clojure.core/map first options)))
+
+       (select (merge {:on-no-prevent-change bindInput!} attrs)
+               (map-indexed (fn [i [v text]]
+                              (option (if (= v value)
+                                        {:value i :selected "selected"}
+                                        {:value i}) text)) options))))
+
+     (= "textarea" type)
+     (textarea (merge
+                {:on-no-prevent-change bindInput!
+                 :on-no-prevent-keyup  bindInput!
+                 :on-no-prevent-input  bindInput!
+                 :on-no-prevent-cut    bindInput!
+                 :on-no-prevent-paste  bindInput!
+                 :value                (app-get data-path)}
+                attrs) (app-get data-path))
+
+     :else
+     (input (merge
+             {:type type
+              :on-no-prevent-change bindInput!
+              :on-no-prevent-keyup  bindInput!
+              :on-no-prevent-input  bindInput!
+              :on-no-prevent-cut    bindInput!
+              :on-no-prevent-paste  bindInput!
+              :value                (app-get data-path)}
+             attrs)))))

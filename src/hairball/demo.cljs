@@ -32,7 +32,13 @@
    (d/a {:href "#" :on-click addTodo :class "btn btn-default"} "add")
    (d/form {:on-submit (fn []
                          (js/console.log "submit"))}
-           (d/Input [:old-item] "text"))
+           (d/div {:class "row"}
+                  (d/div {:class "col-sm-6"}
+                         (d/Input [:demo-select] "select" {:class   "form-control"
+                                                           :options [["key"  "value"]
+                                                                     ["asdf" "Asdf"]]}))
+                  (d/div {:class "col-sm-6"}
+                         (d/Input [:demo-select] "text" {:class "form-control"}))))
    (d/table {:class "table"}
             (d/thead
              (d/tr
