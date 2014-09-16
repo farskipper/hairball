@@ -7,10 +7,6 @@
             #+cljs [goog.events :as gevnt]
             #+cljs [goog.object :as gobj]))
 
-(defn map-values [f m]
-  (into {} (for [[k v] m]
-             [k (f v)])))
-
 (defn escape-html [text]
   (-> (str text)
     (replace "&"  "&amp;")
@@ -58,8 +54,7 @@
                  attrs)
          attrs (if add-hash?
                  (assoc attrs :data-hairball-hash (hash vdom))
-                 attrs)
-         attrs (map-values escape-html attrs)]
+                 attrs)]
      attrs)))
 
 ;NOTE

@@ -10,13 +10,10 @@
   (is (= "&lt;script&gt;alert(&apos;XSS!&apos;);&lt;/script&gt;"
          (escape-html "<script>alert('XSS!');</script>"))))
 
-(deftest test-map-values
-  (is (= {:1 "1" :2 "2"} (map-values str {:1 1 :2 2}))))
-
 (deftest test-cleanup-attrs
   (is (= {:id "0.1"} (cleanup-attrs [0 1] (d/a {:id "css-ids-are-evil"}))))
-  (is (= {:id "0.1"} (cleanup-attrs [0 1] (d/a {:on-click (fn [] 1)}))))
-  (is (= {:id "0.1", :something "{:some &quot;nested&quot;, :thing &quot;&lt;!&gt;&quot;}"} (cleanup-attrs [0 1] (d/a {:something {:some "nested" :thing "<!>"}})))))
+  (is (= {} (cleanup-attrs [0 1] (d/a {:id "css-ids-are-evil"}) false)))
+  (is (= {:id "0.1"} (cleanup-attrs [0 1] (d/a {:on-click (fn [] 1)})))))
 
 
 (deftest test-vdom->string

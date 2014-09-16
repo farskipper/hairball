@@ -4,7 +4,7 @@
             [hairball.app :refer [app-get app-swap!]]))
 
 (app-swap! [:todo-items] ["one" "two" "three"])
-(app-swap! [:new-item] "new item")
+(app-swap! [:new-item] "new \"item\"")
 
 (defn addTodo []
   (app-swap! [:todo-items] (conj (app-get [:todo-items]) (app-get [:new-item])))
