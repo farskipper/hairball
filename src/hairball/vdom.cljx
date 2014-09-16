@@ -198,14 +198,11 @@
                          nil)
            bindInput!  (fn [e]
                          (app-swap! data-path (first (nth options (int (.-value (.-target e))) [nil]))))]
-       (div
-        (pr-str (app-get data-path)) " = " (pr-str value) " " (div (into #{} (clojure.core/map first options)))
-
        (select (merge {:on-no-prevent-change bindInput!} attrs)
                (map-indexed (fn [i [v text]]
                               (option (if (= v value)
                                         {:value i :selected "selected"}
-                                        {:value i}) text)) options))))
+                                        {:value i}) text)) options)))
 
      (= "textarea" type)
      (textarea (merge
