@@ -9,11 +9,11 @@
 
 (defn escape-html [text]
   (-> (str text)
-    (replace "&"  "&amp;")
-    (replace "<"  "&lt;")
-    (replace ">"  "&gt;")
-    (replace "\"" "&quot;")
-    (replace "'"  "&apos;")))
+      (replace "&"  "&amp;")
+      (replace "<"  "&lt;")
+      (replace ">"  "&gt;")
+      (replace "\"" "&quot;")
+      (replace "'"  "&apos;")))
 
 (defn render-attr [[key val]]
   (str " " (name key) "=\"" (escape-html val) "\""))
@@ -331,14 +331,7 @@
                             (.-SIZECHANGED gevnt/EventType)
                             (.-UNRESPONSIVE gevnt/EventType)
                             (.-VISIBILITYCHANGE gevnt/EventType)
-                            (.-STORAGE gevnt/EventType)
-                            (.-DOMSUBTREEMODIFIED gevnt/EventType)
-                            (.-DOMNODEINSERTED gevnt/EventType)
-                            (.-DOMNODEREMOVED gevnt/EventType)
-                            (.-DOMNODEREMOVEDFROMDOCUMENT gevnt/EventType)
-                            (.-DOMNODEINSERTEDINTODOCUMENT gevnt/EventType)
-                            (.-DOMATTRMODIFIED gevnt/EventType)
-                            (.-DOMCHARACTERDATAMODIFIED gevnt/EventType)])
+                            (.-STORAGE gevnt/EventType)])
 
 #+cljs
 (defn callEventHandlers [e vdom path]
@@ -370,23 +363,26 @@
       false)))
 
 #+cljs
-(def ^:private refresh-queued? false)
+(def ^:private render-queued? false)
 #+cljs
 (defn mount [element render-fn]
   (gdom/setProperties element #js {:id "root"})
   (set! last-vdom (render-fn))
   (apply-JSops-to-dom! [(JSop. :replace-node ["root"] [last-vdom])])
   (gevnt/listen js/document listenable-events onEvent true)
-  (let [watch-key (gensym)
-        render!   (fn []
-                    (set! refresh-queued? false)
-                    (let [new-vdom (render-fn)]
-                      (apply-JSops-to-dom! (vdoms->JSops last-vdom new-vdom))
-                      (set! last-vdom new-vdom)))]
+  (let [watch-key   (gensym)
+        render!     (fn []
+                      (set! render-queued? false)
+                      (let [new-vdom (render-fn)]
+                        (apply-JSops-to-dom! (vdoms->JSops last-vdom new-vdom))
+                        (set! last-vdom new-vdom)))
+        queue!render (if (exists? js/requestAnimationFrame)
+                       (fn []
+                         (set! render-queued? true)
+                         (js/requestAnimationFrame render!))
+                       (fn []
+                         (set! render-queued? true)
+                         (js/setTimeout render! 16)))]
     (add-watch app-state watch-key (fn [_ _ _ _]
-                                     (when-not refresh-queued?
-                                       (set! refresh-queued? true)
-                                       (if (exists? js/requestAnimationFrame)
-                                         (js/requestAnimationFrame render!)
-                                         (js/setTimeout render! 16)))))))
-
+                                     (when-not render-queued?
+                                       (queue!render))))))
