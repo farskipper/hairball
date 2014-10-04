@@ -24,10 +24,9 @@
                                        child
                                        (str child))) children)
         children (filter (fn [child]
-                           (or (Vdom? child) (string? child))) children)]
-    (if (= 0 (count (filter Vdom? children)))
-      [(join "" (filter string? children))]
-
+                           (or (string? child) (Vdom? child))) children)]
+    (if (every? string? children)
+      [(join "" children)]
       (clojure.core/map (fn [child]
                           (if (string? child)
                             (Vdom. :span nil [child])
