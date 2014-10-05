@@ -187,6 +187,33 @@
       nil;don't re-asign the form input value if it's the same (causes cursors position to change)
       (gdom/setProperties element (js-obj (name attr) value)))))
 
+(def boolean-attrs #{:allowFullScreen
+                     :async
+                     :autoFocus
+                     :autoPlay
+                     :checked
+                     :controls
+                     :defer
+                     :disabled
+                     :formNoValidate
+                     :hidden
+                     :loop
+                     :multiple
+                     :muted
+                     :noValidate
+                     :readOnly
+                     :required
+                     :seamless
+                     :selected
+                     :itemScope})
+
+#+cljs
+(defn remove-attribute! [path attr]
+  (let [elmt (path->element path)]
+    (if (contains? boolean-attrs attr)
+      (gdom/setProperties elmt (js-obj (name attr) nil))
+      (.removeAttribute elmt (name attr)))))
+
 #+cljs
 (defn apply-JSop-to-dom! [jsop]
   (let [op   (:op jsop)
@@ -206,7 +233,7 @@
      (set-attribute! path (first args) (second args))
 
      (= op :remove-attribute)
-     (.removeAttribute (path->element path) (name (first args)))
+     (remove-attribute! path (first args))
 
      (= op :set-content)
      (gdom/setTextContent (path->element path) (first args))

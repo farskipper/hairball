@@ -203,6 +203,18 @@
                                         {:value i :selected "selected"}
                                         {:value i}) text)) options)))
 
+     (= "checkbox" type)
+     (let [bindInput! (fn [e]
+                        (app-swap! data-path (boolean (.-checked (.-target e)))))]
+       (input (merge
+               {:type "checkbox"
+                :on-no-prevent-change bindInput!
+                :on-no-prevent-click  bindInput!};(app-get data-path)
+               (if (app-get data-path)
+                 {:checked "checked"}
+                 {})
+               attrs)))
+
      (= "textarea" type)
      (textarea (merge
                 {:on-no-prevent-change bindInput!
@@ -211,7 +223,8 @@
                  :on-no-prevent-cut    bindInput!
                  :on-no-prevent-paste  bindInput!
                  :value                (app-get data-path)}
-                attrs) (app-get data-path))
+                attrs)
+               (app-get data-path))
 
      :else
      (input (merge

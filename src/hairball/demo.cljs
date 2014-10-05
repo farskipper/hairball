@@ -3,7 +3,7 @@
             [hairball.vdom :as d :include-macros true]
             [hairball.app :refer [app-get app-swap!]]))
 
-(app-swap! [:todo-items] [{:text "one"} {:text "two"} {:text "three"}])
+(app-swap! [:todo-items] [{:text "one"} {:done true  :text "two"} {:text "three"}])
 (app-swap! [:new-item] "new \"item\"")
 
 (defn addTodo []
