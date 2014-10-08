@@ -1,4 +1,4 @@
-(defproject hairball "0.0.2-SNAPSHOT"
+(defproject hairball "0.0.3-SNAPSHOT"
   :description "Your webapp should only have one hairball"
   :url "https://github.com/smallhelm/hairball"
   :scm {:name "git"
