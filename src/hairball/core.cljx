@@ -399,15 +399,13 @@
 (def ^:private render-queued? false)
 #+cljs
 (defn mount
-  ([render-fn] (mount render-fn nil))
+  ([render-fn] (mount render-fn js/document.documentElement))
   ([render-fn element]
    ;do the initial render
    (set! last-vdom (render-fn))
 
    ;mount the initial render to the DOM
-   (if (nil? element)
-     (.write js/document (vdom->string last-vdom))
-     (mount-vdom-to-element! last-vdom ["root"] element))
+   (mount-vdom-to-element! last-vdom ["root"] element)
 
    ;mount the event system
    (gevnt/listen js/document listenable-events onEvent true)

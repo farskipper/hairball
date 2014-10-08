@@ -69,6 +69,10 @@
 #_
 (hb/mount (fn []
             (d/html {:lang "en"}
+                    (d/head
+                     (d/title "some title")
+                     (d/link {:rel "stylesheet" :href "https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"})
+                     (d/link {:rel "stylesheet" :href "https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"}))
                     (d/body
                      (App)))))
 
