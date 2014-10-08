@@ -164,17 +164,23 @@
 (defn path->element [path]
   (gdom/getElement (path->id path)))
 
-#+cljs
-(defn vdom->element [vdom path]
+
+(defn mount-vdom-to-element! [vdom path element]
   (let [tag      (:type vdom)
         attrs    (cleanup-attrs path vdom)
-        children (:children vdom)
-        element  (js/document.createElement (name tag))]
+        children (:children vdom)]
     (do
       (gdom/setProperties element (clj->js attrs))
       (if-not (contains? child-less-tags tag)
         (set! (.-innerHTML element) (apply str (map-indexed (fn [i vdom]
-                                                              (vdom->string vdom (concat path [i]))) children))))
+                                                              (vdom->string vdom (concat path [i]))) children)))))))
+
+
+#+cljs
+(defn vdom->element [vdom path]
+  (let [element (js/document.createElement (name (:type vdom)))]
+    (do
+      (mount-vdom-to-element! vdom path element)
       element)))
 
 #+cljs
@@ -392,24 +398,34 @@
 #+cljs
 (def ^:private render-queued? false)
 #+cljs
-(defn mount [element render-fn]
-  (gdom/setProperties element #js {:id "root"})
-  (set! last-vdom (render-fn))
-  (apply-JSops-to-dom! [(JSop. :replace-node ["root"] [last-vdom])])
-  (gevnt/listen js/document listenable-events onEvent true)
-  (let [watch-key   (gensym)
-        render!     (fn []
-                      (set! render-queued? false)
-                      (let [new-vdom (render-fn)]
-                        (apply-JSops-to-dom! (vdoms->JSops last-vdom new-vdom))
-                        (set! last-vdom new-vdom)))
-        queue!render (if (exists? js/requestAnimationFrame)
-                       (fn []
-                         (set! render-queued? true)
-                         (js/requestAnimationFrame render!))
-                       (fn []
-                         (set! render-queued? true)
-                         (js/setTimeout render! 16)))]
-    (add-watch app-state watch-key (fn [_ _ _ _]
-                                     (when-not render-queued?
-                                       (queue!render))))))
+(defn mount
+  ([render-fn] (mount render-fn nil))
+  ([render-fn element]
+   ;do the initial render
+   (set! last-vdom (render-fn))
+
+   ;mount the initial render to the DOM
+   (if (nil? element)
+     (.write js/document (vdom->string last-vdom))
+     (mount-vdom-to-element! last-vdom ["root"] element))
+
+   ;mount the event system
+   (gevnt/listen js/document listenable-events onEvent true)
+
+   ;render when app-state changes
+   (let [watch-key   (gensym)
+         render!     (fn []
+                       (set! render-queued? false)
+                       (let [new-vdom (render-fn)]
+                         (apply-JSops-to-dom! (vdoms->JSops last-vdom new-vdom))
+                         (set! last-vdom new-vdom)))
+         queue!render (if (exists? js/requestAnimationFrame)
+                        (fn []
+                          (set! render-queued? true)
+                          (js/requestAnimationFrame render!))
+                        (fn []
+                          (set! render-queued? true)
+                          (js/setTimeout render! 16)))]
+     (add-watch app-state watch-key (fn [_ _ _ _]
+                                      (when-not render-queued?
+                                        (queue!render)))))))

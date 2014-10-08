@@ -65,7 +65,12 @@
                              (d/td "some")
                              (d/td "data"))) (app-get [:table-rows])))))))
 
-(hb/mount (js/document.getElementById "hairball-mount") App)
+(hb/mount App (js/document.getElementById "hairball-mount"))
+#_
+(hb/mount (fn []
+            (d/html {:lang "en"}
+                    (d/body
+                     (App)))))
 
 
 (js/setTimeout (fn []
