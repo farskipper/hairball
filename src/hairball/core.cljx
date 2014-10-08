@@ -164,7 +164,7 @@
 (defn path->element [path]
   (gdom/getElement (path->id path)))
 
-
+#+cljs
 (defn mount-vdom-to-element! [vdom path element]
   (let [tag      (:type vdom)
         attrs    (cleanup-attrs path vdom)
@@ -174,7 +174,6 @@
       (if-not (contains? child-less-tags tag)
         (set! (.-innerHTML element) (apply str (map-indexed (fn [i vdom]
                                                               (vdom->string vdom (concat path [i]))) children)))))))
-
 
 #+cljs
 (defn vdom->element [vdom path]
