@@ -30,16 +30,22 @@
   (is (= "<ul><li>one</li><li>two</li></ul>" (vdom->string (d/ul (d/li "one")
                                                                  (d/li "two")) [0] false)))
 
+  (testing "list of vdoms (children)"
+    (is (= "" (vdom->string [] [0] false)))
+    (is (= "<b>one</b>" (vdom->string [(d/b "one")] [0] false)))
+    (is (= "<b>one</b><b>two</b>" (vdom->string [(d/b "one") (d/b "two")] [0] false))))
+
   (testing "non vdom input"
     (is (= "some string" (vdom->string "some string")))
 
     (is (= "&lt;script&gt;alert(&apos;XSS!&apos;);&lt;/script&gt;"
-           (vdom->string "<script>alert('XSS!');</script>")))
+           (vdom->string "<script>alert('XSS!');</script>"))))
 
-    (testing "rubish"
-      (is (= "" (vdom->string nil)))
-      (is (= "{}" (vdom->string {})))
-      (is (= "{:some &quot;data&quot;}" (vdom->string {:some "data"}))))))
+  (testing "rubish"
+    (is (= "" (vdom->string nil)))
+    (is (= "" (vdom->string {})))
+    (is (= ":somedata" (vdom->string {:some "data"})))
+    (is (= "" (vdom->string (fn [x] (+ x 1)))))))
 
 
 (deftest test-vdoms->JSops

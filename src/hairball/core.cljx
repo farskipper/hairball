@@ -65,18 +65,28 @@
   ([vdom path]         (vdom->string vdom path true))
   ([vdom path add-id?] (vdom->string vdom path add-id? false))
   ([vdom path add-id? add-hash?]
-   (if-not (Vdom? vdom)
-     (escape-html (str vdom))
-     (do
-       (let [tag      (:type vdom)
-             attrs    (cleanup-attrs path vdom add-id? add-hash?)
-             children (:children vdom)]
-         (if (contains? child-less-tags tag)
-           (str "<" (name tag) (render-attrs attrs) "/>")
-           (str "<" (name tag) (render-attrs attrs) ">"
-                (apply str (map-indexed (fn [i vdom]
-                                          (vdom->string vdom (concat path [i]) add-id? add-hash?)) children))
-                "</" (name tag) ">")))))))
+   (cond
+    (Vdom? vdom)
+    (do
+      (let [tag      (:type vdom)
+            attrs    (cleanup-attrs path vdom add-id? add-hash?)
+            children (:children vdom)]
+        (if (contains? child-less-tags tag)
+          (str "<" (name tag) (render-attrs attrs) "/>")
+          (str "<" (name tag) (render-attrs attrs) ">"
+               (vdom->string children path add-id? add-hash?)
+               "</" (name tag) ">"))))
+
+    (or (coll? vdom) (seq? vdom))
+    (apply str (map-indexed (fn [i vdom]
+                              (vdom->string vdom (concat path [i]) add-id? add-hash?)) vdom))
+
+    (fn? vdom)
+    ""
+
+    :else
+    (escape-html (str vdom)))))
+
 
 (defn all-childrens-keys [children1 children2]
   (range (max (count children1) (count children2))))
@@ -172,8 +182,7 @@
     (do
       (gdom/setProperties element (clj->js attrs))
       (if-not (contains? child-less-tags tag)
-        (set! (.-innerHTML element) (apply str (map-indexed (fn [i vdom]
-                                                              (vdom->string vdom (concat path [i]))) children)))))))
+        (set! (.-innerHTML element) (vdom->string children path))))))
 
 #+cljs
 (defn vdom->element [vdom path]
