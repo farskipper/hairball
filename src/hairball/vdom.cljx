@@ -66,6 +66,7 @@
             div
             dl
             dt
+            ellipse
             em
             embed
             fieldset
