@@ -45,7 +45,28 @@
     (is (= "" (vdom->string nil)))
     (is (= "" (vdom->string {})))
     (is (= ":somedata" (vdom->string {:some "data"})))
-    (is (= "" (vdom->string (fn [x] (+ x 1)))))))
+    (is (= "" (vdom->string (fn [x] (+ x 1))))))
+
+  (testing "tags that don't escape-html"
+    (is (= "<script>alert('Hello World!');var a = 1 > 0;</script>"
+           (vdom->string (d/script "alert('Hello World!');var a = 1 > 0;") [0] false)))
+    (is (= "<style>div {background:url('something');color:#ffffff;}</style>"
+           (vdom->string (d/style "div {background:url('something');color:#ffffff;}") [0] false)))
+
+    (is (= "<div>alert(&apos;Hello World!&apos;);var a = 1 &gt; 0;</div>"
+           (vdom->string (d/div "alert('Hello World!');var a = 1 > 0;") [0] false)))
+
+    ;only one child and it must be a string
+    (is (= "<script></script>"
+           (vdom->string (d/script (d/span "one") (d/span "two")) [0] false)))
+    (is (= "<script>onetwothree</script>"
+           (vdom->string (d/script  "one" "two" "three") [0] false)));NOTE fix children combine these strings into one
+    (is (= "<script></script>"
+           (vdom->string (d/script  "one" "two" "three" (d/span)) [0] false)))
+    (is (= "<script></script>"
+           (vdom->string (d/script  {}) [0] false)))
+    (is (= "<script></script>"
+           (vdom->string (d/script  nil) [0] false)))))
 
 
 (deftest test-vdoms->JSops

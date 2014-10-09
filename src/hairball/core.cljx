@@ -39,6 +39,9 @@
                        :track
                        :wbr})
 
+(def non-escaped-signle-child-only-tags #{:script
+                                          :style})
+
 (defn path->id [path]
   (join "." path))
 
@@ -74,7 +77,11 @@
         (if (contains? child-less-tags tag)
           (str "<" (name tag) (render-attrs attrs) "/>")
           (str "<" (name tag) (render-attrs attrs) ">"
-               (vdom->string children path add-id? add-hash?)
+               (if (contains? non-escaped-signle-child-only-tags tag)
+                 (if (string? (first children))
+                   (first children)
+                   "")
+                 (vdom->string children path add-id? add-hash?))
                "</" (name tag) ">"))))
 
     (or (coll? vdom) (seq? vdom))
