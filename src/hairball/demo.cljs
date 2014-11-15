@@ -48,6 +48,8 @@
                                                                            ["asdf" "Asdf"]]}))
                         (d/div {:class "col-sm-6"}
                                (d/Input [:demo-select] "text" {:class "form-control"}))))
+         (d/div {:the-body-of-this-tag-is-raw-html-I-understand-the-risks-when-using-this true}
+                "<h1>raw-html</h1>")
          (d/table {:class "table"}
                   (d/thead
                    (d/tr

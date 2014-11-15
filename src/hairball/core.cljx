@@ -26,12 +26,15 @@
 (def child-less-tags #{:area
                        :base
                        :br
+                       :circle
                        :col
                        :embed
+                       :ellipse
                        :hr
                        :img
                        :input
                        :keygen
+                       :line
                        :link
                        :meta
                        :param
@@ -77,7 +80,7 @@
         (if (contains? child-less-tags tag)
           (str "<" (name tag) (render-attrs attrs) "/>")
           (str "<" (name tag) (render-attrs attrs) ">"
-               (if (contains? non-escaped-signle-child-only-tags tag)
+               (if (or (contains? non-escaped-signle-child-only-tags tag) (true? (get attrs :the-body-of-this-tag-is-raw-html-I-understand-the-risks-when-using-this nil)))
                  (if (string? (first children))
                    (first children)
                    "")
