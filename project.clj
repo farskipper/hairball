@@ -31,6 +31,12 @@
                                          :compiler {:output-to  "examples/sandbox/main.js"
                                                     :output-dir "examples/sandbox/out"
                                                     :optimizations :none
+                                                    :source-map true}}
+                                        {:id "todomvc"
+                                         :source-paths ["src" "target/classes" "target/generated/classes" "examples/todomvc"]
+                                         :compiler {:output-to  "examples/todomvc/main.js"
+                                                    :output-dir "examples/todomvc/out"
+                                                    :optimizations :none
                                                     :source-map true}}]}
 
                    :aliases {"dev"    ["pdo" "cljx" "auto," "cljsbuild" "auto," "quickie"]
