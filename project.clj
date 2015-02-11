@@ -6,18 +6,16 @@
   :license {:name "The MIT License (MIT)"
             :url "http://opensource.org/licenses/MIT"}
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2311"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]]
 
-  :jar-exclusions [#"\.cljx|\.svn|\.swp|\.swo|\.DS_Store"]
+  :jar-exclusions [#"\.cljx|\.swp|\.swo|\.DS_Store"]
   :resource-paths ["target/generated/classes"]
   :source-paths   ["src"]
 
-
-
-  :profiles {:dev {:plugins [[quickie "0.2.5"]
-                             [lein-cljsbuild "1.0.3"]
-                             [com.keminglabs/cljx "0.4.0"]
+  :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-2760"]]
+                   :plugins [[quickie "0.2.5"]
+                             [lein-cljsbuild "1.0.4"]
+                             [com.keminglabs/cljx "0.5.0"]
                              [lein-pdo "0.1.1"]]
 
                    :cljx {:builds [{:source-paths ["src"]
@@ -26,12 +24,12 @@
                                    {:source-paths ["src"]
                                     :output-path "target/generated/classes"
                                     :rules :cljs}]}
-                   :hooks [cljx.hooks]
+                   :prep-tasks [["cljx"  "once"]  "javac"  "compile"]
 
-                   :cljsbuild {:builds [{:id "dev"
-                                         :source-paths ["src" "target/classes" "target/generated/classes"]
-                                         :compiler {:output-to  "resources/public/js/main.js"
-                                                    :output-dir "resources/public/js/out"
+                   :cljsbuild {:builds [{:id "sandbox"
+                                         :source-paths ["src" "target/classes" "target/generated/classes" "examples/sandbox"]
+                                         :compiler {:output-to  "examples/sandbox/main.js"
+                                                    :output-dir "examples/sandbox/out"
                                                     :optimizations :none
                                                     :source-map true}}]}
 

@@ -1,4 +1,4 @@
-(ns hairball.demo
+(ns hairball.example.main
   (:require [hairball.core :as hb]
             [hairball.vdom :as d :include-macros true]
             [hairball.app :refer [app-get app-swap!]]))
@@ -67,7 +67,7 @@
                              (d/td "some")
                              (d/td "data"))) (app-get [:table-rows])))))))
 
-(hb/mount App (js/document.getElementById "hairball-mount"))
+(hb/mount App  (js/document.getElementById  "hairball-mount"))
 #_
 (hb/mount (fn []
             (d/html {:lang "en"}

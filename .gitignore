@@ -9,5 +9,5 @@ pom.xml.asc
 .lein-repl-history
 .lein-plugins/
 .lein-failures
-resources/public/js/out
-resources/public/js/main.js
+examples/*/out
+examples/*/main.js
