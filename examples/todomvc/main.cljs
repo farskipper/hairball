@@ -25,6 +25,11 @@
   (fn []
     (app-swap! [:items] (drop-nth i (app-get [:items])))))
 
+(defn add-new-item []
+  (do
+    (app-swap! [:items] (conj (app-get [:items]) {:text (app-get [:new-item])}))
+    (app-swap! [:new-item] "")))
+
 (defn Item [i _]
   (d/li {:class (if (app-get [:items i :done]) "completed")}
         (d/div {:class "view"}
@@ -41,7 +46,10 @@
                               (d/h1 "todos")
                               (d/Input [:new-item] "text" {:class "cssid-new-todo"
                                                            :placeholder "What needs to be done?"
-                                                           :autofocus true}))
+                                                           :autofocus true
+                                                           :on-no-prevent-keypress (fn [e]
+                                                                                     (if (= 13 (.-keyCode e))
+                                                                                       (add-new-item)))}))
                     (if (not-empty (app-get [:items]))
                       [(d/section {:class "cssid-main"}
                                   (d/Input [:toggle-all] "checkbox" {:class "cssid-toggle-all"})

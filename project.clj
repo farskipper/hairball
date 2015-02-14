@@ -32,6 +32,12 @@
                                                     :output-dir "examples/sandbox/out"
                                                     :optimizations :none
                                                     :source-map true}}
+                                        {:id "forms"
+                                         :source-paths ["src" "target/classes" "target/generated/classes" "examples/forms"]
+                                         :compiler {:output-to  "examples/forms/main.js"
+                                                    :output-dir "examples/forms/out"
+                                                    :optimizations :none
+                                                    :source-map true}}
                                         {:id "todomvc"
                                          :source-paths ["src" "target/classes" "target/generated/classes" "examples/todomvc"]
                                          :compiler {:output-to  "examples/todomvc/main.js"
