@@ -179,13 +179,28 @@
 #+cljs
 (vdom/gen-dom-fns)
 
+(def ^:private sync-queue [])
+(defn flush-sync-queue! []
+  (doseq [f sync-queue]
+    (f))
+  (set! sync-queue []))
+(defn on-next-sync! [f]
+  #+cljs
+  (if (empty sync-queue)
+    (js/setTimeout flush-sync-queue! 300))
+  (set! sync-queue (conj sync-queue f)))
+(defn e-sync-state [data-path cb]
+  (fn [e]
+    (on-next-sync! (fn []
+                     (if (and e (.-target e))
+                       (app-swap! data-path (cb (.-target e))))))))
+
 (defn Input [data-path & [type attrs]]
   (let [type       (or type "text")
         attrs      (if (map? attrs)
                      attrs
                      {})
-        bindInput! (fn [e]
-                     (app-swap! data-path (.-value (.-target e))))]
+        bindInput! (e-sync-state data-path (fn [t] (.-value t)))]
     ;TODO suport type "gdate" (use google's date picker)
     (cond
      (= "select" type)
@@ -196,8 +211,7 @@
            value       (if (contains? (into #{} (clojure.core/map first options)) value)
                          value
                          nil)
-           bindInput!  (fn [e]
-                         (app-swap! data-path (first (nth options (int (.-value (.-target e))) [nil]))))]
+           bindInput! (e-sync-state data-path (fn [t] (first (nth options (int (.-value t))))))]
        (select (merge {:on-no-prevent-change bindInput!} attrs)
                (map-indexed (fn [i [v text]]
                               (option (if (= v value)
@@ -205,12 +219,11 @@
                                         {:value i}) text)) options)))
 
      (= "checkbox" type)
-     (let [bindInput! (fn [e]
-                        (app-swap! data-path (boolean (.-checked (.-target e)))))]
+     (let [bindInput! (e-sync-state data-path (fn [t] (boolean (.-checked t))))]
        (input (merge
                {:type "checkbox"
                 :on-no-prevent-change bindInput!
-                :on-no-prevent-click  bindInput!};(app-get data-path)
+                :on-no-prevent-click  bindInput!}
                (if (app-get data-path)
                  {:checked "checked"}
                  {})

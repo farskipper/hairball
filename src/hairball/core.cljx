@@ -406,12 +406,19 @@
 
 #+cljs
 (defn onEvent [e]
-  (let [path (split (.-id (.-target e)) #"\.")
-        path (rest path)];pop off the root
-    (do
-      (.stopPropagation e)
-      (callEventHandlers e last-vdom path)
-      false)))
+  (do
+    (.stopPropagation e)
+    (let [path (split (.-id (.-target e)) #"\.")
+          path (rest path)];pop off the root
+      (callEventHandlers e last-vdom path))
+    false))
+
+#+cljs
+(def requestAnimationFrame (if (exists? js/requestAnimationFrame)
+                             (fn [cb]
+                               (js/requestAnimationFrame cb))
+                             (fn [cb]
+                               (js/setTimeout cb 16))))
 
 #+cljs
 (def ^:private render-queued? false)
@@ -435,13 +442,9 @@
                        (let [new-vdom (render-fn)]
                          (apply-JSops-to-dom! (vdoms->JSops last-vdom new-vdom))
                          (set! last-vdom new-vdom)))
-         queue!render (if (exists? js/requestAnimationFrame)
-                        (fn []
-                          (set! render-queued? true)
-                          (js/requestAnimationFrame render!))
-                        (fn []
-                          (set! render-queued? true)
-                          (js/setTimeout render! 16)))]
+         queue!render  (fn []
+                         (set! render-queued? true)
+                         (requestAnimationFrame render!))]
      (add-watch app-state watch-key (fn [_ _ _ _]
                                       (when-not render-queued?
                                         (queue!render)))))))
