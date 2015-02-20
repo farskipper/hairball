@@ -2,6 +2,24 @@
 
 This is not a React.js wrapper, it's a pure ClojureScript implementation of a similar approach to UI rendering. And by the way, it's implemented in fewer lines of code than most ClojureScript React.js wrappers.
 
+ * Everything that can, runs both on the server and client. (great for code-sharing initial page load rendering on the server for SEO)
+ * In-memory event delegation for fast dispatch.
+ * Uses requestAnimationFrame to batch re-renders.
+ * Takes a big advantage of the built in Clojure persistent datastructures to represent the Virtual DOM.
+
+## Production ready?
+
+No. At the moment this project is mostly experimental/educational. But there is no reason it couldn't become production ready.
+
+In the mean time you should use one of these excellent React.js wrappers.
+ * **[Reagent](http://reagent-project.github.io/)** - minimalist, very idiomatic to Clojure (hides the React API)
+ * **[Om](https://github.com/omcljs/om)** - single global app-state, closer to React's API
+ * **[Quiescent](https://github.com/levand/quiescent)** - lightweight, very flexible
+
+## How to use hairball
+
+Check out the [TodoMVC](https://github.com/smallhelm/hairball/blob/master/examples/todomvc/main.cljs).
+
 ## How hairball works
 
 ### Virtual DOM data structure
@@ -27,12 +45,12 @@ In practice you use syntactic sugar
 
 ### (vdom->string vdom)
 
-Simply take in a virtual DOM and dump out an HTML string
+Simply take in a Virtual DOM and return an HTML string.
 
 
 ### (vdoms->JSops vdom1 vdom2); aka the diffing function
 
-Given two vdom's (typically the old one and the new one) a list of operations that should be applied to the DOM.
+Given two vdom's (typically the old one and the new one) return a list of operations that should be applied to the DOM.
 
 ```clojure
 (defrecord JSop [op path args])
@@ -58,21 +76,13 @@ Look at the [tests](https://github.com/smallhelm/hairball/blob/master/test/hairb
 
 ### (apply-JSop-to-dom! jsop)
 
-This function applies a JSop to the DOM. (BTW did you notice all the functions in this README are pure except this one) For browser normalization this uses the Google Closure library.
+This function applies a JSop to the DOM.  For browser normalization this uses the Google Closure library.
+
+BTW did you notice this is the first mention of an impure function? Did you further notice this all the other functions run both server-side and client-side?
 
 ### Event handlers
 
-Similar to React, hairball mounts a single event listener to the root document. Then simulates event dispatch to your event handlers in the virtual DOM. Again this uses g-Closure library for browser normalization.
-
-## Production ready?
-
-No. At the moment this project is mostly experimental/educational. But there is no reason it couldn't become production ready.
-
-In the mean time you should use one of these great React.js wrappers.
- * **[Reagent](http://reagent-project.github.io/)** - minimalist, very idiomatic to Clojure (hides the React API)
- * **[Om](https://github.com/omcljs/om)** - single global app-state, closer to React's API
- * **[Quiescent](https://github.com/levand/quiescent)** - lightweight, very flexible
-
+Similar to React, hairball mounts a single event listener to the root document. Then simulates event dispatch to your event handlers in the virtual DOM. Again this uses Google Closure library for browser normalization.
 
 ## License
 The MIT License (MIT)
