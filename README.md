@@ -30,7 +30,7 @@ In practice you use syntactic sugar
 Simply take in a virtual DOM and dump out an HTML string
 
 
-### (vdoms->JSops vdom1 vdom2) ;aka the diffing function
+### (vdoms->JSops vdom1 vdom2); aka the diffing function
 
 Given two vdom's (typically the old one and the new one) a list of operations that should be applied to the DOM.
 
@@ -54,7 +54,7 @@ another example
     (JSop :set-content [0] [""])
     (JSop :insert-child [0] [(d/b "after") 0])]
 ```
-Look at the (tests)[https://github.com/smallhelm/hairball/blob/master/test/hairball/core_test.clj] for more examples.
+Look at the [tests](https://github.com/smallhelm/hairball/blob/master/test/hairball/core_test.clj) for more examples.
 
 ### (apply-JSop-to-dom! jsop)
 
@@ -69,9 +69,9 @@ Similar to React, hairball mounts a single event listener to the root document. 
 No. At the moment this project is mostly experimental/educational. But there is no reason it couldn't become production ready.
 
 In the mean time you should use one of these great React.js wrappers.
- * (Reagent)[http://reagent-project.github.io/] - minimalist, very idiomatic to Clojure (hides the React API)
- * (Om)[https://github.com/omcljs/om] - single global app-state, closer to React's API
- * (Quiescent)[https://github.com/levand/quiescent] - lightweight, very flexible
+ * **[Reagent](http://reagent-project.github.io/)** - minimalist, very idiomatic to Clojure (hides the React API)
+ * **[Om](https://github.com/omcljs/om)** - single global app-state, closer to React's API
+ * **[Quiescent](https://github.com/levand/quiescent)** - lightweight, very flexible
 
 
 ## License
