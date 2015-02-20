@@ -63,9 +63,6 @@
                  attrs)]
      attrs)))
 
-;NOTE
-;NOTE vdom will not be made by hand, so don't be too worried about checking it
-;NOTE
 (defn vdom->string
   ([vdom]              (vdom->string vdom ["root"]))
   ([vdom path]         (vdom->string vdom path true))
