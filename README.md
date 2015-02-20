@@ -2,12 +2,9 @@
 
 This is not a React.js wrapper, it's a pure ClojureScript implementation of a similar approach to UI rendering. And by the way, it's implemented in fewer lines of code than most ClojureScript React.js wrappers.
 
- * Everything that can, runs both on the server and client. (great for code-sharing initial page load rendering on the server for SEO)
- * In-memory event delegation for fast dispatch.
- * Uses requestAnimationFrame to batch re-renders.
- * Takes a big advantage of the built in Clojure persistent datastructures to represent the Virtual DOM.
+The point of hairball is to prove how embracing pure functions and immutable data structures makes a reactive Virtual DOM library a cinch to write.
 
-## Production ready?
+### Production ready?
 
 No. At the moment this project is mostly experimental/educational. But there is no reason it couldn't become production ready.
 
