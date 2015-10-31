@@ -15,7 +15,7 @@ In the mean time you should use one of these excellent React.js wrappers.
 
 ## How to use hairball
 
-Check out the [TodoMVC](https://github.com/smallhelm/hairball/blob/master/examples/todomvc/main.cljs).
+Check out the [TodoMVC](https://github.com/mrwrite/hairball/blob/master/examples/todomvc/main.cljs).
 
 ## How hairball works
 
@@ -69,7 +69,7 @@ another example
     (JSop :set-content [0] [""])
     (JSop :insert-child [0] [(d/b "after") 0])]
 ```
-Look at the [tests](https://github.com/smallhelm/hairball/blob/master/test/hairball/core_test.clj) for more examples.
+Look at the [tests](https://github.com/mrwrite/hairball/blob/master/test/hairball/core_test.clj) for more examples.
 
 ### (apply-JSop-to-dom! jsop)
 
@@ -82,24 +82,4 @@ BTW did you notice this is the first mention of an impure function? Did you furt
 Similar to React, hairball mounts a single event listener to the root document. Then simulates event dispatch to your event handlers in the virtual DOM. Again this uses Google Closure library for browser normalization.
 
 ## License
-The MIT License (MIT)
-
-Copyright (c) 2015 Small Helm LLC
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+MIT

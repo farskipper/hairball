@@ -78,7 +78,7 @@
          (d/pre (pr-str (app-get [])))
          (d/footer {:class "cssid-info"}
                    (d/p "Double-click to edit a todo")
-                   (d/p "Created by " (d/a {:href "https://github.com/smallhelm"} "Small Helm LLC"))
+                   (d/p "Created by " (d/a {:href "https://github.com/mrwrite"} "mrwrite"))
                    (d/p "Part of " (d/a {:href "http://todomvc.com"} "TodoMVC")))))
 
 (hb/mount App js/document.body)
